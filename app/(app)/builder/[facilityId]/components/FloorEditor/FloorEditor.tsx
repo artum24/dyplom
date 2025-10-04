@@ -1,179 +1,123 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
-import ReactGridLayout, { Layout } from 'react-grid-layout';
-import { v4 as uuid } from 'uuid';
-import { useMapBuilder } from '../../../../../../store/builder/builder';
-import ZoneCard from '@/app/(app)/builder/[facilityId]/components/ZoneCard/ZoneCard';
-import { useModal } from '../../../../../../store/modal/modal';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { Layout } from 'react-grid-layout';
+import { useMapBuilder } from '@/store/builder/builder';
+import 'react-grid-layout/css/styles.css';
+import 'react-resizable/css/styles.css';
+import { Button } from '@/components/ui/Button/Button';
+import { Loader } from 'lucide-react';
+import { ZoneGrid } from '@/components/ZoneGrid/ZoneGrid';
+import { v4 as uuidv4 } from 'uuid';
+import { ZoneType } from '@/store/builder/types';
 
-const CELL = 20;
-const COLS = 36;
-const ROWS = 30;
-const MARGIN: [number, number] = [8, 8];
-const PADDING: [number, number] = [12, 12];
-
-const clamp = (item: Layout) => {
-  const w = Math.max(1, Math.min(item.w, COLS));
-  const h = Math.max(1, Math.min(item.h, ROWS));
-  const x = Math.max(0, Math.min(item.x, COLS - w));
-  const y = Math.max(0, Math.min(item.y, ROWS - h));
-  return { ...item, x, y, w, h };
-};
-
-export default function FloorEditor() {
+export const FloorEditor = ({ floorName }: { floorName: string }) => {
   const {
     floors,
     selectedFloorIndex,
+    updateZonesInCurrentFloor,
+    saveZonesToDatabase,
+    loadZonesForFloor,
     addZoneToCurrentFloor,
-    updateZoneInCurrentFloor,
-    removeZoneFromCurrentFloor,
-    selectedZoneId,
-    setSelectedZoneId,
+    dragItem,
   } = useMapBuilder();
-  const { openZoneEdit } = useModal();
   const floor = selectedFloorIndex != null ? floors[selectedFloorIndex] : null;
   const zones = floor?.zones || [];
+  const [isLoading, setIsLoading] = useState(false);
+  const [loadingState, setLoadingState] = useState<Record<string, boolean>>({});
 
-  const ref = useRef<HTMLDivElement>(null);
-  const [width, setWidth] = useState(1200);
+  const layout = zones.map((zone) => ({
+    i: zone.id,
+    x: zone.x,
+    y: zone.y,
+    w: zone.width,
+    h: zone.height,
+    minW: zone.minW || 2,
+    minH: zone.minH || 2,
+    isDraggable: true,
+    isResizable: true,
+  }));
+
   useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const ro = new ResizeObserver(() => {
-      requestAnimationFrame(() => setWidth(el.clientWidth));
-    });
-    ro.observe(el);
-    setWidth(el.clientWidth);
-    return () => ro.disconnect();
+    if (!floor || !floor.id) return;
+
+    if (loadingState[floor.id]) return;
+
+    if (floor.zones && floor.zones.length > 0) {
+      return;
+    }
+
+    setIsLoading(true);
+
+    loadZonesForFloor(floor.id)
+      .then(() => {
+        setLoadingState((prev) => ({ ...prev, [floor.id]: true }));
+      })
+      .finally(() => setIsLoading(false));
+  }, [floor?.id, loadZonesForFloor, loadingState]);
+
+  const interactionRef = useRef(false);
+
+  const onInteraction = useCallback(() => {
+    interactionRef.current = true;
   }, []);
 
-  const layout = useMemo<Layout[]>(() => {
-    return zones.map((z) => ({
-      i: z.id,
-      x: Math.max(0, Math.floor(z.x / CELL)),
-      y: Math.max(0, Math.floor(z.y / CELL)),
-      w: Math.max(1, Math.ceil(z.width / CELL)),
-      h: Math.max(1, Math.ceil(z.height / CELL)),
-      isDraggable: true,
-      isResizable: true,
-    }));
-  }, [zones]);
-
-  const persistOne = (raw: Layout) => {
-    const fixed = clamp(raw);
-    const z = zones.find((zz) => zz.id === fixed.i);
-    if (!z) return;
-    const nx = fixed.x * CELL,
-      ny = fixed.y * CELL;
-    const nw = fixed.w * CELL,
-      nh = fixed.h * CELL;
-    if (z.x === nx && z.y === ny && z.width === nw && z.height === nh) return;
-    updateZoneInCurrentFloor({
-      ...z,
-      x: nx,
-      y: ny,
-      width: nw,
-      height: nh,
-    });
-  };
-
-  const handleLayoutChange = (next: Layout[]) => {
-    if (!next || !next.length) return;
-    for (const it of next) {
-      persistOne(it);
+  const onLayoutChange = useCallback((nextLayout: Layout[]) => {
+    if (!interactionRef.current) {
+      return;
     }
-  };
 
-  if (!floor) return <div className="p-6 text-gray-400">Оберіть поверх</div>;
+    updateZonesInCurrentFloor(nextLayout);
+
+    interactionRef.current = false;
+  }, []);
+
+  if (!floor)
+    return (
+      <div className="p-6 text-gray-400 h-full flex justify-center items-center text-2xl">
+        Оберіть поверх
+      </div>
+    );
+
+  if (isLoading) {
+    return (
+      <div className="p-6 flex justify-center items-center h-full">
+        <Loader className="animate-spin" />
+        <div className="text-gray-600 text-2xl">Завантаження зон...</div>
+      </div>
+    );
+  }
 
   return (
-    <div
-      ref={ref}
-      className="relative mx-auto h-[640px] w-full overflow-hidden rounded-md border bg-gray-50"
-      onDoubleClick={(e) => {
-        const rect = e.currentTarget.getBoundingClientRect();
-        const gx = Math.floor((e.clientX - rect.left) / CELL);
-        const gy = Math.floor((e.clientY - rect.top) / CELL);
-        addZoneToCurrentFloor({
-          id: uuid(),
-          floor_id: floor.id,
-          type: 'room',
-          x: gx * CELL,
-          y: gy * CELL,
-          width: 5 * CELL,
-          height: 5 * CELL,
-          color: '#2ECC71',
-          subtitle: 'Новий блок',
-        });
-      }}
-      onDragOver={(e) => e.preventDefault()}
-      onDrop={(e) => {
-        e.preventDefault();
-        const data = e.dataTransfer.getData('application/x-zone');
-        if (!data) return;
-        const preset = JSON.parse(data);
-        const rect = e.currentTarget.getBoundingClientRect();
-        const gx = Math.floor((e.clientX - rect.left) / CELL);
-        const gy = Math.floor((e.clientY - rect.top) / CELL);
-        addZoneToCurrentFloor({
-          id: uuid(),
-          floor_id: floor.id,
-          type: preset.type,
-          x: gx * CELL,
-          y: gy * CELL,
-          width: Math.max(1, preset.w) * CELL,
-          height: Math.max(1, preset.h) * CELL,
-          color: preset.color,
-          subtitle: preset.label,
-        });
-      }}
-      style={{
-        backgroundImage: `
-          linear-gradient(to right, rgba(0,0,0,.05) 1px, transparent 1px),
-          linear-gradient(to bottom, rgba(0,0,0,.05) 1px, transparent 1px),
-          linear-gradient(to right, rgba(0,0,0,.09) 1px, transparent 1px),
-          linear-gradient(to bottom, rgba(0,0,0,.09) 1px, transparent 1px)
-        `,
-        backgroundSize: `
-          ${CELL}px ${CELL}px,
-          ${CELL}px ${CELL}px,
-          ${CELL * 5}px ${CELL * 5}px,
-          ${CELL * 5}px ${CELL * 5}px
-        `,
-      }}
-    >
-      <ReactGridLayout
-        className="layout"
+    <div className="flex flex-col gap-4">
+      <div className="flex justify-between items-center">
+        <h1 className="text-xl font-semibold">{floorName ?? 'Поверх'}</h1>
+        <Button onClick={() => floor && saveZonesToDatabase(floor.id)}>Зберегти</Button>
+      </div>
+      <ZoneGrid
+        minHeight="150px"
         layout={layout}
-        cols={COLS}
-        rowHeight={CELL}
-        width={width}
-        margin={MARGIN}
-        containerPadding={PADDING}
-        compactType={null}
-        preventCollision
-        isBounded
-        maxRows={ROWS}
-        isDraggable
-        isResizable
-        draggableCancel=".action"
-        onLayoutChange={handleLayoutChange}
-        onDragStop={(_, item) => persistOne(item)}
-        onResizeStop={(_, item) => persistOne(item)}
-      >
-        {zones.map((z) => (
-          <div key={z.id}>
-            <ZoneCard
-              zone={z}
-              isSelected={z.id === selectedZoneId}
-              onSelect={() => setSelectedZoneId(z.id)}
-              onEdit={() => openZoneEdit(z)}
-              onDelete={() => removeZoneFromCurrentFloor(z.id)}
-            />
-          </div>
-        ))}
-      </ReactGridLayout>
+        onLayoutChange={onLayoutChange}
+        onInteraction={onInteraction}
+        zones={zones}
+        floor={floor}
+        isEditable={true}
+        onDrop={(_, item) => {
+          addZoneToCurrentFloor({
+            id: uuidv4(),
+            floor_id: floor.id,
+            type: dragItem?.type as ZoneType,
+            x: item.x,
+            y: item.y,
+            width: item.w,
+            height: item.h,
+            minW: item.minW,
+            minH: item.minH,
+            color: dragItem?.color as string,
+            subtitle: dragItem?.label as string,
+          });
+        }}
+      />
     </div>
   );
-}
+};

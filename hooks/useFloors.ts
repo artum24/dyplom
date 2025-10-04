@@ -5,19 +5,34 @@ import { supabase } from '@/lib/supabase';
 import { useMapBuilder } from '../store/builder/builder';
 
 export function useFloors(facilityId: string) {
-  const { floors, setFloors } = useMapBuilder();
+  const { floors, setFloors, stateFacilityId, setStateFacilityId } = useMapBuilder();
 
   useEffect(() => {
     if (!facilityId) return;
-    (async () => {
-      const { data } = await supabase
-        .from('floors')
-        .select('*')
-        .eq('facility_id', facilityId)
-        .order('idx', { ascending: true });
-      if (data) setFloors(data);
-    })();
-  }, [facilityId, setFloors]);
+    if (!floors.length || stateFacilityId !== facilityId) {
+      (async () => {
+        const { data } = await supabase
+          .from('floors')
+          .select('*')
+          .eq('facility_id', facilityId)
+          .order('idx', { ascending: true });
+
+        if (data) {
+          const existingFloorsMap = new Map(floors.map((f) => [f.id, f]));
+
+          const mergedFloors = data.map((floor) => {
+            const existingFloor = existingFloorsMap.get(floor.id);
+            return {
+              ...floor,
+              zones: existingFloor?.zones || [],
+            };
+          });
+          setStateFacilityId(facilityId);
+          setFloors(mergedFloors);
+        }
+      })();
+    }
+  }, [facilityId]);
 
   async function addFloor(name: string) {
     const { data } = await supabase

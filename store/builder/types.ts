@@ -1,12 +1,12 @@
 export type ZoneType =
   | 'room'
-  | 'corridor'
   | 'ward'
   | 'operating'
   | 'diagnostics'
   | 'isolation'
   | 'toilet'
-  | 'reception';
+  | 'reception'
+  | 'exit';
 
 export interface Zone {
   id: string;
@@ -16,9 +16,17 @@ export interface Zone {
   y: number;
   width: number;
   height: number;
+  minW?: number;
+  minH?: number;
   color: string;
   subtitle?: string;
   description?: string;
+  zone_doctors?: {
+    doctor_id: string;
+    doctors: Doctor;
+  }[];
+  time_from?: string;
+  time_to?: string;
 }
 
 export interface Floor {
@@ -35,6 +43,4 @@ export interface Doctor {
   specialty?: string;
   email?: string;
   phone?: string;
-  photo_url?: string;
-  work_hours?: Record<string, [string, string][]>;
 }

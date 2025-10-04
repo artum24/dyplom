@@ -3,11 +3,17 @@
 import { useFloors } from '../../../../../../hooks/useFloors';
 import { useState } from 'react';
 import { useMapBuilder } from '../../../../../../store/builder/builder';
+import { Plus } from 'lucide-react';
+import { Button } from '@/components/ui/Button/Button';
+import { Input } from '@/components/ui/Input/Input';
+import { RemoveFloorDialog } from '@/app/(app)/builder/[facilityId]/components/FloorSidebar/components/RemoveFloor/RemoveFloor';
+import { EditFloor } from '@/app/(app)/builder/[facilityId]/components/FloorSidebar/components/EditFloor/EditFloor';
+import { toast } from 'sonner';
 
-export default function FloorSidebar({ facilityId }: { facilityId: string }) {
-  const { floors, addFloor, renameFloor, removeFloor } = useFloors(facilityId);
-  const { selectedFloorIndex, setSelectedFloorIndex } = useMapBuilder();
+export const FloorSidebar = ({ facilityId }: { facilityId: string }) => {
   const [newName, setNewName] = useState('');
+  const { addFloor } = useFloors(facilityId);
+  const { selectedFloorIndex, setSelectedFloorIndex, floors } = useMapBuilder();
 
   return (
     <aside className="w-64 border-r bg-white p-4">
@@ -24,25 +30,8 @@ export default function FloorSidebar({ facilityId }: { facilityId: string }) {
           >
             <span className="truncate">{floor.name}</span>
             <div className="flex gap-1">
-              <button
-                className="text-xs text-gray-500 hover:text-blue-600"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  const name = prompt('Нова назва поверху:', floor.name);
-                  if (name) renameFloor(floor.id, name);
-                }}
-              >
-                ✏️
-              </button>
-              <button
-                className="text-xs text-gray-500 hover:text-red-600"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (confirm('Видалити поверх?')) removeFloor(floor.id);
-                }}
-              >
-                🗑️
-              </button>
+              <EditFloor facilityId={facilityId} floor={floor} />
+              <RemoveFloorDialog facilityId={facilityId} floor={floor} />
             </div>
           </li>
         ))}
@@ -55,21 +44,22 @@ export default function FloorSidebar({ facilityId }: { facilityId: string }) {
             if (newName.trim()) {
               addFloor(newName.trim());
               setNewName('');
+              toast('Поверх успішно додано!');
             }
           }}
           className="flex gap-2"
         >
-          <input
+          <Input
             value={newName}
             onChange={(e) => setNewName(e.target.value)}
             className="flex-1 rounded border px-2 py-1 text-sm"
             placeholder="Новий поверх"
           />
-          <button type="submit" className="rounded bg-blue-600 px-2 py-1 text-sm text-white">
-            +
-          </button>
+          <Button type="submit" className="px-2 text-sm ">
+            <Plus width={16} height={16} />
+          </Button>
         </form>
       </div>
     </aside>
   );
-}
+};

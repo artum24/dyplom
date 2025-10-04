@@ -2,10 +2,13 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
+import { createClient } from '@/lib/supabase.clients';
+import { useRouter } from 'next/navigation';
+import { Button } from '@/components/ui/Button/Button';
 
 export default function AppHeader() {
   const [email, setEmail] = useState<string | null>(null);
-
+  const router = useRouter();
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
       setEmail(data.user?.email ?? null);
@@ -16,41 +19,39 @@ export default function AppHeader() {
     return () => sub.subscription.unsubscribe();
   }, []);
 
+  const onLogout = async () => {
+    const supabaseClient = createClient();
+    await supabaseClient.auth.signOut();
+    router.push('/login');
+  };
+
   return (
-    <header className="border-b bg-white">
-      <div className="mx-auto flex max-w-6xl items-center gap-4 px-4 py-3">
-        <Link href="/" className="font-semibold">
+    <header className="border-b flex justify-between px-4 py-3">
+      <div className="flex items-center gap-4">
+        <Link href="/dashboard" className="font-semibold">
           MedMap
         </Link>
-        <nav className="flex items-center gap-3 text-sm">
+        <nav className="flex items-center gap-3 text-sm justify-between">
           {email && (
             <>
               <Link href="/dashboard" className="text-gray-700 hover:text-black">
-                Dashboard
-              </Link>
-              <Link href="/kiosk-demo" className="text-gray-700 hover:text-black">
-                Kiosk
+                Заклади
               </Link>
             </>
           )}
         </nav>
-        <div className="ml-auto">
-          {email ? (
-            <button
-              className="rounded border px-3 py-1.5 text-sm hover:bg-gray-50"
-              onClick={() => supabase.auth.signOut()}
-            >
-              Вийти ({email})
-            </button>
-          ) : (
-            <Link
-              className="rounded bg-blue-600 px-3 py-1.5 text-sm text-white hover:bg-blue-700"
-              href="/auth/sign-in"
-            >
-              Увійти
-            </Link>
-          )}
-        </div>
+      </div>
+      <div>
+        {email ? (
+          <Button onClick={onLogout}>Вийти ({email})</Button>
+        ) : (
+          <Link
+            className="rounded bg-blue-600 px-3 py-1.5 text-sm text-white hover:bg-blue-700"
+            href="/login"
+          >
+            Увійти
+          </Link>
+        )}
       </div>
     </header>
   );
