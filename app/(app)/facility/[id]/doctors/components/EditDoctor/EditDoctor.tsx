@@ -16,17 +16,17 @@ import { Input } from '@/components/ui/Input/Input';
 import { toast } from 'sonner';
 import { Doctor } from '@/store/builder/types';
 import { normalizePhone } from '@/app/(app)/facility/[id]/doctors/components/helpers/constants';
-import { DoctorForm, validate, } from '@/app/(app)/facility/[id]/doctors/components/helpers/validation';
+import { DoctorForm, validate } from '@/app/(app)/facility/[id]/doctors/components/helpers/validation';
 import { supabase } from '@/lib/supabase';
 
 type DoctorTouched = Partial<Record<keyof DoctorForm, boolean>>;
 
 export function EditDoctorDialog({
-  facilityId,
-  doctor,
-  doctors,
-  onSuccess,
-}: {
+                                   facilityId,
+                                   doctor,
+                                   doctors,
+                                   onSuccess,
+                                 }: {
   facilityId: string;
   doctor: Doctor;
   doctors: Doctor[];
@@ -67,8 +67,8 @@ export function EditDoctorDialog({
 
   const setField =
     <K extends keyof DoctorForm>(k: K) =>
-    (val: string) =>
-      setForm((s) => ({ ...s, [k]: val }));
+      (val: string) =>
+        setForm((s) => ({ ...s, [k]: val }));
 
   const handleBlur = (k: keyof DoctorForm) => () => setTouched((t) => ({ ...t, [k]: true }));
 
@@ -100,7 +100,7 @@ export function EditDoctorDialog({
             return { ...d, ...payload };
           }
           return d;
-        })
+        }),
       );
       setIsOpen(false);
     } catch (e) {
