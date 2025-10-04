@@ -1,6 +1,6 @@
 import * as v from 'valibot';
+import { passwordValidation } from '@/lib/helpers/validators';
 
-import { passwordValidation } from '@app/utils/helpers/validators';
 
 export const updatePasswordSchema = v.pipe(
   v.object({
@@ -11,8 +11,8 @@ export const updatePasswordSchema = v.pipe(
     v.partialCheck(
       [['password'], ['repeatPassword']],
       (input) => input.password === input.repeatPassword,
-      'Пароль не співпадає'
+      'Пароль не співпадає',
     ),
-    ['repeatPassword']
-  )
+    ['repeatPassword'],
+  ),
 );

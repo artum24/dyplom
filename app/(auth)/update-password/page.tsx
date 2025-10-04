@@ -1,6 +1,5 @@
-import UpdatePasswordForm from '@app/features/auth/update-password/UpdatePasswordForm';
-
 import type { Metadata } from 'next';
+import UpdatePasswordForm from '@/components/auth/update-password/UpdatePasswordForm';
 
 export const metadata: Metadata = {
   title: 'Оновлення паролю',
