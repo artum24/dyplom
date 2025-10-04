@@ -160,7 +160,7 @@ export const useMapBuilder = create<MapBuilderState>()((set, get) => ({
   },
 
   saveZonesToDatabase: async (floorId: string) => {
-    const { floors, selectedFloorIndex, stateFacilityId } = get();
+    const { floors, selectedFloorIndex } = get();
     if (selectedFloorIndex === null) return;
 
     const floor = floors[selectedFloorIndex];
@@ -176,17 +176,17 @@ export const useMapBuilder = create<MapBuilderState>()((set, get) => ({
           const { zone_doctors, ...updatedZone } = zone;
           return { ...updatedZone };
         });
-        const { data, error } = await supabase.from('zones').insert(zonesToSave);
+        const { error } = await supabase.from('zones').insert(zonesToSave);
         const doctors = zones.map((zone) => ({
           zoneId: zone.id,
           doctorIds: (zone?.zone_doctors || [])?.map((doctor) => doctor.doctor_id),
         }));
 
         doctors.map((doctor) => {
-          setZoneDoctors(doctor.zoneId, doctor.doctorIds, stateFacilityId as string);
+          setZoneDoctors(doctor.zoneId, doctor.doctorIds);
         });
         if (error) {
-          throw error;
+          console.error(error);
         }
       }
       toast('Зони успішно збережено!');
@@ -211,7 +211,7 @@ export const useMapBuilder = create<MapBuilderState>()((set, get) => ({
           `
         )
         .eq('floor_id', floorId);
-      if (error) throw error;
+      if (error) console.error(error);
 
       const { floors } = get();
       const newFloors = floors.map((floor) =>

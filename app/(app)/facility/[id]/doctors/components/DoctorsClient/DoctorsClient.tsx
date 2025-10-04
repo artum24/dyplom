@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { listDoctors } from '@/lib/data/doctors';
-import { Doctor } from '../../../../../../../store/builder/types';
+import { Doctor } from '@/store/builder/types';
 import { AddDoctorDialog } from '@/app/(app)/facility/[id]/doctors/components/AddDoctor/AddDoctor';
 import { Input } from '@/components/ui/Input/Input';
 import { Button } from '@/components/ui/Button/Button';

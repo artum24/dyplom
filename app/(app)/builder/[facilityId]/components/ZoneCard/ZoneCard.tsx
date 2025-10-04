@@ -1,6 +1,6 @@
 'use client';
 
-import { Zone } from '../../../../../../store/builder/types';
+import { Zone } from '@/store/builder/types';
 import * as React from 'react';
 import { useState } from 'react';
 import { Clock, LogOut, Minus, SquarePen, Trash2, Users } from 'lucide-react';

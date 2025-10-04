@@ -1,4 +1,9 @@
-import { COLS, MARGIN, PADDING, ROWS, } from '@/app/(app)/builder/[facilityId]/components/FloorEditor/constants';
+import {
+  COLS,
+  MARGIN,
+  PADDING,
+  ROWS,
+} from '@/app/(app)/builder/[facilityId]/components/FloorEditor/constants';
 import ReactGridLayout, { Layout } from 'react-grid-layout';
 import { useEffect, useRef, useState } from 'react';
 import { Floor, Zone } from '@/store/builder/types';

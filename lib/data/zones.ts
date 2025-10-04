@@ -1,6 +1,6 @@
 import { supabase } from '@/lib/supabase';
 
-export async function setZoneDoctors(zoneId: string, doctorIds: string[], stateFacilityId: string) {
+export async function setZoneDoctors(zoneId: string, doctorIds: string[]) {
   const { error: delErr } = await supabase.from('zone_doctors').delete().eq('zone_id', zoneId);
   if (delErr) throw delErr;
 

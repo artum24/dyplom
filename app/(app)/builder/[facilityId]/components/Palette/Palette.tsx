@@ -1,6 +1,6 @@
 'use client';
 
-import { useMapBuilder } from '../../../../../../store/builder/builder';
+import { useMapBuilder } from '@/store/builder/builder';
 
 export type PresetType = {
   type: string;

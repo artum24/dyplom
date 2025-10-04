@@ -17,7 +17,7 @@ export default function PatientFacilityNavigator() {
 
   const [query, setQuery] = useState('');
 
-  const { loading } = useFacilityData(facilityId as string);
+  useFacilityData(facilityId as string);
   const { selectedFloorId, zones, floors, setSelectedFloorId } = useViewClinic();
 
   const zonesOnFloor = useMemo(
@@ -80,7 +80,7 @@ export default function PatientFacilityNavigator() {
                     floor={floor as unknown as Floor}
                     isEditable={false}
                   />
-                  <Legend zones={zonesOnFloor} />
+                  <Legend />
                 </div>
                 <DoctorSidebar zonesOnFloor={activeZones} />
               </div>

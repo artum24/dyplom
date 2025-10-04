@@ -13,7 +13,6 @@ import {
 import { Button } from '@/components/ui/Button/Button';
 import { Label } from '@/components/ui/Label/Label';
 import { Input } from '@/components/ui/Input/Input';
-import { useRouter } from 'next/navigation';
 import { Plus } from 'lucide-react';
 import { toast } from 'sonner';
 import { createDoctor, listDoctors } from '@/lib/data/doctors';
@@ -37,7 +36,6 @@ export const AddDoctorDialog = ({
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const router = useRouter();
 
   const [form, setForm] = useState<DoctorForm>({
     full_name: '',
@@ -47,7 +45,7 @@ export const AddDoctorDialog = ({
   });
 
   const [touched, setTouched] = useState<DoctorTouched>({});
-  const [errors, setErrors] = useState<DoctorErrors>({});
+  const [_, setErrors] = useState<DoctorErrors>({});
 
   const currentErrors = useMemo(() => validate(form), [form]);
   const isValid = useMemo(() => Object.keys(currentErrors).length === 0, [currentErrors]);

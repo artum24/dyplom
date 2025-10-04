@@ -1,7 +1,6 @@
-import { Zone } from '@/store/builder/types';
 import { PRESETS } from '@/app/(app)/builder/[facilityId]/components/Palette/Palette';
 
-export const Legend = ({ zones }: { zones: Zone[] }) => {
+export const Legend = () => {
   return (
     <div className="mt-3 flex flex-wrap gap-3 text-xs text-slate-600">
       {PRESETS.map((t) => (

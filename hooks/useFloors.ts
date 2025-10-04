@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { useMapBuilder } from '../store/builder/builder';
+import { useMapBuilder } from '@/store/builder/builder';
 
 export function useFloors(facilityId: string) {
   const { floors, setFloors, stateFacilityId, setStateFacilityId } = useMapBuilder();

@@ -1,8 +1,8 @@
 'use client';
 
-import { useFloors } from '../../../../../../hooks/useFloors';
+import { useFloors } from '@/hooks/useFloors';
 import { useState } from 'react';
-import { useMapBuilder } from '../../../../../../store/builder/builder';
+import { useMapBuilder } from '@/store/builder/builder';
 import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/Button/Button';
 import { Input } from '@/components/ui/Input/Input';

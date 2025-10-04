@@ -22,7 +22,7 @@ interface ViewClinicState {
   setSelectedZoneId: (id: string | null) => void;
 }
 
-export const useViewClinic = create<ViewClinicState>()((set, get) => ({
+export const useViewClinic = create<ViewClinicState>()((set) => ({
   stateFacilityId: null,
   doctors: [],
   floors: [],
