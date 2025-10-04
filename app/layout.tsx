@@ -5,28 +5,20 @@ import { Toaster } from '@/components/ui/Sonner/Sonner';
 import { SupabaseProvider } from '@/components/providers/SupabaseProvider/SupabaseProvider';
 import { ReactNode } from 'react';
 
-let title = 'Next.js + Postgres Auth Starter';
-let description =
-  'This is a Next.js starter kit that uses NextAuth.js for simple email + password login and a Postgres database to persist the data.';
+let title = 'Medmap';
 
 export const metadata = {
   title,
-  description,
-  twitter: {
-    card: 'summary_large_image',
-    title,
-    description,
-  },
   metadataBase: new URL('https://nextjs-postgres-auth.vercel.app'),
 };
 
 const RootLayout = (props: { children: ReactNode }) => {
   return (
     <html lang="en">
-      <body className={GeistSans.variable}>
-        <SupabaseProvider>{props.children}</SupabaseProvider>
-        <Toaster />
-      </body>
+    <body className={GeistSans.variable}>
+    <SupabaseProvider>{props.children}</SupabaseProvider>
+    <Toaster />
+    </body>
     </html>
   );
 };
