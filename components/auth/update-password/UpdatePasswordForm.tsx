@@ -5,13 +5,11 @@ import { useState } from 'react';
 import { useSupabaseClient } from '@supabase/auth-helpers-react';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
+import { useAppForm } from '@/hooks/useFieldContext';
+import { updatePasswordSchema } from '@/components/auth/update-password/validation';
+import { FormInput } from '@/components/ui/Input/Input';
+import { Button } from '@/components/ui/Button/Button';
 
-import { Button } from '@app/components/ui/button';
-import { FormInput } from '@app/components/ui/input';
-
-import { updatePasswordSchema } from '@app/features/auth/update-password/validation';
-
-import { useAppForm } from '@app/hooks/useFieldContext';
 
 const UpdatePasswordForm = () => {
   const [loading, setLoading] = useState(false);
