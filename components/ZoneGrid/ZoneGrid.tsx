@@ -1,15 +1,11 @@
-import {
-  COLS,
-  MARGIN,
-  PADDING,
-  ROWS,
-} from '@/app/(app)/builder/[facilityId]/components/FloorEditor/constants';
+import { COLS, MARGIN, PADDING, ROWS } from '@/app/(app)/builder/[facilityId]/components/FloorEditor/constants';
 import ReactGridLayout, { Layout } from 'react-grid-layout';
 import { useEffect, useRef, useState } from 'react';
 import { Floor, Zone } from '@/store/builder/types';
 import { ZoneCard } from '@/app/(app)/builder/[facilityId]/components/ZoneCard/ZoneCard';
 import { useModal } from '@/store/modal/modal';
 import { useMapBuilder } from '@/store/builder/builder';
+import { cn } from '@/lib/utils/utils';
 
 type ZoneGridProps = {
   layout: Layout[];
@@ -19,21 +15,19 @@ type ZoneGridProps = {
   floor: Floor;
   zones: Zone[];
   isEditable: boolean;
-  minHeight: string;
   activeZones?: Zone[];
 };
 
 export const ZoneGrid = ({
-  layout,
-  onLayoutChange,
-  onInteraction,
-  onDrop,
-  zones,
-  floor,
-  isEditable,
-  minHeight,
-  activeZones,
-}: ZoneGridProps) => {
+                           layout,
+                           onLayoutChange,
+                           onInteraction,
+                           onDrop,
+                           zones,
+                           floor,
+                           isEditable,
+                           activeZones,
+                         }: ZoneGridProps) => {
   const ref = useRef<HTMLDivElement>(null);
   const { openZoneEdit } = useModal();
   const { removeZoneFromCurrentFloor, dragItem } = useMapBuilder();
@@ -64,7 +58,10 @@ export const ZoneGrid = ({
     <div className="relative mx-auto w-full overflow-hidden rounded-md border bg-white">
       <div
         ref={ref}
-        className={`relative mx-auto w-full overflow-hidden rounded-md border bg-gray-50 h-[calc(100vh-${minHeight})]`}
+        className={cn(`relative mx-auto w-full overflow-hidden rounded-md border bg-gray-50 h-[calc(100vh-150px)]`, {
+          'h-[calc(100vh-150px)]': isEditable,
+          'h-[calc(100vh-340px)]': !isEditable,
+        })}
         style={{
           backgroundImage: `
               linear-gradient(to right, rgba(255,255,255,0.9) 1px, transparent 1px),

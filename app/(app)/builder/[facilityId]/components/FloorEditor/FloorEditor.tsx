@@ -95,7 +95,6 @@ export const FloorEditor = ({ floorName }: { floorName: string }) => {
         <Button onClick={() => floor && saveZonesToDatabase(floor.id)}>Зберегти</Button>
       </div>
       <ZoneGrid
-        minHeight="150px"
         layout={layout}
         onLayoutChange={onLayoutChange}
         onInteraction={onInteraction}

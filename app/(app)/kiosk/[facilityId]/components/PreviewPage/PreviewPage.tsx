@@ -5,7 +5,9 @@ import { Header } from '@/app/(app)/kiosk/[facilityId]/components/PreviewPage/co
 import { Actions } from '@/app/(app)/kiosk/[facilityId]/components/PreviewPage/components/Actions/Actions';
 import { Floor } from '@/store/builder/types';
 import { Legend } from '@/app/(app)/kiosk/[facilityId]/components/PreviewPage/components/Legend/Legend';
-import { DoctorSidebar } from '@/app/(app)/kiosk/[facilityId]/components/PreviewPage/components/DoctorSidebar/DoctorSidebar';
+import {
+  DoctorSidebar,
+} from '@/app/(app)/kiosk/[facilityId]/components/PreviewPage/components/DoctorSidebar/DoctorSidebar';
 import { ZoneGrid } from '@/components/ZoneGrid/ZoneGrid';
 import { useParams } from 'next/navigation';
 import { useViewClinic } from '@/store/viewClinic/viewClinic';
@@ -22,7 +24,7 @@ export default function PatientFacilityNavigator() {
 
   const zonesOnFloor = useMemo(
     () => zones.filter((z) => z.floor_id === selectedFloorId),
-    [selectedFloorId, zones]
+    [selectedFloorId, zones],
   );
 
   const activeZones = useMemo(() => {
@@ -34,8 +36,8 @@ export default function PatientFacilityNavigator() {
         z.zone_doctors?.some(
           (d) =>
             d.doctors.full_name.toLowerCase().includes(q) ||
-            d.doctors.specialty?.toLowerCase().includes(q)
-        )
+            d.doctors.specialty?.toLowerCase().includes(q),
+        ),
     );
   }, [zonesOnFloor, query]);
 
@@ -74,7 +76,6 @@ export default function PatientFacilityNavigator() {
                 <div className="lg:col-span-6">
                   <ZoneGrid
                     activeZones={query.trim().toLowerCase().length ? activeZones : []}
-                    minHeight="340px"
                     layout={layout}
                     zones={zonesOnFloor}
                     floor={floor as unknown as Floor}
