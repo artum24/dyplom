@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 import { Filter, Mail, Phone, Stethoscope, User2, X } from 'lucide-react';
 import { RemoveDoctorDialog } from '@/app/(app)/facility/[id]/doctors/components/RemoveDoctor/RemoveDoctor';
 import { EditDoctorDialog } from '@/app/(app)/facility/[id]/doctors/components/EditDoctor/EditDoctor';
+import { EmptyState } from '@/components/EmptyState/EmptyState';
 
 export default function DoctorsClient({ facilityId }: { facilityId: string }) {
   const [items, setItems] = useState<Doctor[]>([]);
@@ -40,7 +41,7 @@ export default function DoctorsClient({ facilityId }: { facilityId: string }) {
       (items || [])
         .map((d) => (d.specialty || '').trim())
         .filter(Boolean)
-        .map((s) => s.toLowerCase())
+        .map((s) => s.toLowerCase()),
     );
     return Array.from(s).sort();
   }, [items]);
@@ -178,7 +179,8 @@ export default function DoctorsClient({ facilityId }: { facilityId: string }) {
                     <User2 className="size-5 text-muted-foreground" />
                     <span>{d.full_name}</span>
                     {d.specialty && (
-                      <span className="ml-1 inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs text-muted-foreground">
+                      <span
+                        className="ml-1 inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs text-muted-foreground">
                         <Stethoscope className="size-3.5" />
                         {d.specialty}
                       </span>
@@ -227,26 +229,6 @@ export default function DoctorsClient({ facilityId }: { facilityId: string }) {
   );
 }
 
-// ——— Reusable empty state ———
-function EmptyState({
-  title,
-  description,
-  action,
-}: {
-  title: string;
-  description?: string;
-  action?: React.ReactNode;
-}) {
-  return (
-    <div className="rounded-lg border bg-white p-10 text-center">
-      <h2 className="text-lg font-semibold">{title}</h2>
-      {description && <p className="mt-1 text-sm text-muted-foreground">{description}</p>}
-      {action && <div className="mt-4 flex justify-center">{action}</div>}
-    </div>
-  );
-}
-
-// ——— Utils ———
 function capitalize(s: string) {
   if (!s) return s;
   return s.charAt(0).toUpperCase() + s.slice(1);
@@ -254,7 +236,6 @@ function capitalize(s: string) {
 
 function formatPhone(raw?: string) {
   if (!raw) return '';
-  // очікуємо +380XXXXXXXXX → +380 XX XXX XX XX
   const digits = raw.replace(/[^\d+]/g, '');
   const m = digits.match(/^\+?(\d{3})(\d{2})(\d{3})(\d{2})(\d{2})$/);
   if (m) return `+${m[1]} ${m[2]} ${m[3]} ${m[4]} ${m[5]}`;
