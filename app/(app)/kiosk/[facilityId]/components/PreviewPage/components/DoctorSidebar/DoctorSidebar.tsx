@@ -1,12 +1,14 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card/Card';
-import { Sparkles, SquareUserRound } from 'lucide-react';
+import { Route, Sparkles, SquareUserRound } from 'lucide-react';
 import { Doctor, Zone } from '@/store/builder/types';
+import { Button } from '@/components/ui/Button/Button';
 
 type DoctorSidebarProps = {
   zonesOnFloor: Zone[];
+  onPickDoctor?: (doctorId: string) => void;
 };
 
-export const DoctorSidebar = ({ zonesOnFloor }: DoctorSidebarProps) => {
+export const DoctorSidebar = ({ zonesOnFloor, onPickDoctor }: DoctorSidebarProps) => {
   const doctors = zonesOnFloor.reduce((acc, zone) => {
     const zoneDoctors = zone.zone_doctors;
     zoneDoctors?.forEach((d) => {
@@ -30,12 +32,9 @@ export const DoctorSidebar = ({ zonesOnFloor }: DoctorSidebarProps) => {
             {doctors.length === 0 && (
               <div className="text-xs text-slate-500">Нічого не знайдено</div>
             )}
-            {doctors.map((d) => {
-              return (
-                <button
-                  key={d.id}
-                  className="w-full text-left p-2 border rounded-xl hover:bg-slate-50 flex items-center gap-3"
-                >
+            {doctors.map((d) => (
+              <div key={d.id} className="w-full p-2 border rounded-xl bg-white flex items-center gap-3 justify-between">
+                <div className="flex items-center gap-3">
                   <div className="h-8 w-8 rounded-full grid place-items-center border bg-white">
                     <Sparkles className="h-4 w-4" />
                   </div>
@@ -43,9 +42,14 @@ export const DoctorSidebar = ({ zonesOnFloor }: DoctorSidebarProps) => {
                     <div className="text-sm font-medium leading-tight">{d.full_name}</div>
                     <div className="text-xs text-slate-500">{d.specialty}</div>
                   </div>
-                </button>
-              );
-            })}
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button size="sm" variant="secondary" onClick={() => onPickDoctor?.(d.id)}>
+                    <Route className="h-4 w-4 mr-1" /> Шлях
+                  </Button>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </CardContent>

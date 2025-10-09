@@ -1,26 +1,38 @@
 import { create } from 'zustand';
 import type { Doctor, Floor, Zone } from '../builder/types';
 
+
+export type ViewConnection = { from_zone_id: string; to_zone_id: string; weight?: number };
+
+
 interface ViewClinicState {
   stateFacilityId: string | null;
+
 
   floors: Omit<Floor, 'zones'>[];
   selectedFloorId: string | null;
 
+
   zones: Zone[];
   selectedZoneId: string | null;
 
+
   doctors: Doctor[];
 
-  setDoctors: (doctors: Doctor[]) => void;
+  activePathZoneIds: string[];
+  startZoneId: string | null;
 
+  setDoctors: (doctors: Doctor[]) => void;
   setStateFacilityId: (id: string | null) => void;
   setFloors: (floors: Omit<Floor, 'zones'>[]) => void;
   setSelectedFloorId: (id: string | null) => void;
-
   setZones: (zones: Zone[]) => void;
   setSelectedZoneId: (id: string | null) => void;
+
+  setActivePathZoneIds: (ids: string[]) => void;
+  setStartZoneId: (id: string | null) => void;
 }
+
 
 export const useViewClinic = create<ViewClinicState>()((set) => ({
   stateFacilityId: null,
@@ -28,20 +40,22 @@ export const useViewClinic = create<ViewClinicState>()((set) => ({
   floors: [],
   selectedFloorId: null,
 
+
   zones: [],
   selectedZoneId: null,
 
-  setStateFacilityId: (id: string | null) => set({ stateFacilityId: id }),
-  setDoctors: (doctors: Doctor[]) => set({ doctors }),
-  setFloors: (floors: Omit<Floor, 'zones'>[]) => {
-    set({
-      floors,
-    });
-  },
+  activePathZoneIds: [],
+  startZoneId: null,
 
-  setSelectedFloorId: (id: string | null) => set({ selectedFloorId: id }),
 
-  setZones: (zones: Zone[]) => set({ zones }),
+  setStateFacilityId: (id) => set({ stateFacilityId: id }),
+  setDoctors: (doctors) => set({ doctors }),
+  setFloors: (floors) => set({ floors }),
+  setSelectedFloorId: (id) => set({ selectedFloorId: id }),
+  setZones: (zones) => set({ zones }),
+  setSelectedZoneId: (id) => set({ selectedZoneId: id }),
 
-  setSelectedZoneId: (id: string | null) => set({ selectedZoneId: id }),
+
+  setActivePathZoneIds: (ids) => set({ activePathZoneIds: ids }),
+  setStartZoneId: (id) => set({ startZoneId: id }),
 }));
