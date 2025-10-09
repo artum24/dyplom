@@ -18,6 +18,9 @@ export const PRESETS = [
   { type: 'toilet', label: 'Туалет', color: '#7F8C8D', w: 2, h: 2, minW: 2, minH: 2 },
   { type: 'reception', label: 'Реєстратура', color: '#E67E22', w: 5, h: 3, minW: 2, minH: 2 },
   { type: 'exit', label: 'Вихід', color: '#000000', w: 2, h: 1, minW: 2, minH: 1 },
+  { type: 'lift', label: 'Ліфт', color: '#3498DB', w: 2, h: 2, minW: 1, minH: 1 },
+  { type: 'stairs', label: 'Сходи', color: '#c29bd7', w: 2, h: 2, minW: 1, minH: 1 },
+  { type: 'transition', label: 'Перехід', color: '#95a5a6', w: 2, h: 2, minW: 1, minH: 1 },
 ];
 
 export const Palette = () => {

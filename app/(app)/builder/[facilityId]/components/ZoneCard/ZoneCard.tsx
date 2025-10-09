@@ -5,6 +5,9 @@ import * as React from 'react';
 import { useState } from 'react';
 import { Clock, LogOut, Minus, SquarePen, Trash2, Users } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge/Badge';
+import { LiftIcon } from '@/components/icons/LiftIcon';
+import { StairsIcon } from '@/components/icons/StairsIcon';
+import { TransitionIcon } from '@/components/icons/TransitionIcon';
 
 interface ZoneCardProps {
   zone: Zone;
@@ -23,6 +26,7 @@ function getZoneTypeLabel(type: string): string {
     isolation: 'Ізолятор',
     toilet: 'Санвузол',
     reception: 'Рецепція',
+    exit: 'Вихід',
   };
   return typeMap[type] || type;
 }
@@ -35,7 +39,8 @@ export const ZoneCard = ({ isActive, zone, onEdit, onDelete, isView }: ZoneCardP
   const zoneLabel = zone.subtitle || getZoneTypeLabel(zone.type);
   const hasDoctors = zone.zone_doctors && zone.zone_doctors.length > 0;
   const hasWorkHours = zone.time_from && zone.time_to;
-  const isExit = zone.type === 'exit';
+  const isFreeZone = zone?.type === 'toilet' || zone?.type === 'exit' || zone?.type === 'transition' || zone?.type === 'lift' || zone?.type === 'stairs' || zone?.type === 'reception';
+
   const doctors = zone?.zone_doctors || [];
   return (
     <div
@@ -51,18 +56,15 @@ export const ZoneCard = ({ isActive, zone, onEdit, onDelete, isView }: ZoneCardP
           borderWidth: 1,
         }}
       >
-        <div className="flex justify-between items-start mb-1">
-          {zone.type === 'exit' ? (
-            <div className="flex items-center">
-              <LogOut className="mr-1" size={16} />
-              <span className="font-semibold">Вихід</span>
-            </div>
-          ) : (
-            <div className="text-base font-semibold truncate">{zoneLabel}</div>
-          )}
+        <div className="flex items-center mb-1 gap-1">
+          {zone.type === 'exit' && <LogOut className="mr-1" size={16} />}
+          {zone.type === 'lift' && <LiftIcon />}
+          {zone.type === 'stairs' && <StairsIcon />}
+          {zone.type === 'transition' && <TransitionIcon />}
+          <div className="text-base font-semibold truncate">{zoneLabel}</div>
 
           {!isView && showActions && (
-            <div className="flex items-center space-x-1 text-xs">
+            <div className="flex items-center space-x-1 text-xs absolute top-1 right-1">
               <button
                 className="action p-1 hover:bg-black/20 rounded transition-colors"
                 onClick={(e) => {
@@ -88,7 +90,7 @@ export const ZoneCard = ({ isActive, zone, onEdit, onDelete, isView }: ZoneCardP
         </div>
 
         <div className="flex flex-col flex-1">
-          {!isExit && hasWorkHours && (
+          {!isFreeZone && hasWorkHours && (
             <div className="flex items-center text-xs gap-1 mt-1">
               <Clock size={14} />
               <span className="whitespace-nowrap">
@@ -99,7 +101,7 @@ export const ZoneCard = ({ isActive, zone, onEdit, onDelete, isView }: ZoneCardP
           )}
 
           {zone.description && (
-            <div className="mt-1 text-xs text-white/85 line-clamp-2 overflow-hidden">
+            <div className="mt-1 text-xs line-clamp-2 overflow-hidden">
               {zone.description}
             </div>
           )}

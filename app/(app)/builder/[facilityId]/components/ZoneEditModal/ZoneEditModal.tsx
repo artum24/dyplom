@@ -11,13 +11,7 @@ import { Calendar } from '@/components/ui/TimePicker/TimePicker';
 import { Label } from '@/components/ui/Label/Label';
 import { Input } from '@/components/ui/Input/Input';
 import { Button } from '@/components/ui/Button/Button';
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/Dialog/Dialog';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/Dialog/Dialog';
 import { PRESETS } from '@/app/(app)/builder/[facilityId]/components/Palette/Palette';
 import { toast } from 'sonner';
 
@@ -29,6 +23,9 @@ export const TYPE_OPTIONS: { value: ZoneType; label: string }[] = [
   { value: 'isolation', label: 'Ізолятор' },
   { value: 'reception', label: 'Реєстратура' },
   { value: 'toilet', label: 'Санвузол' },
+  { value: 'lift', label: 'Ліфт' },
+  { value: 'stairs', label: 'Сходи' },
+  { value: 'transition', label: 'Перехід' },
 ];
 
 export const ZoneEditModal = ({ facilityId }: { facilityId: string }) => {
@@ -57,7 +54,7 @@ export const ZoneEditModal = ({ facilityId }: { facilityId: string }) => {
     })();
   }, [facilityId, zoneForEdit]);
 
-  const isToilet = local?.type === 'toilet' || local?.type === 'exit';
+  const isFreeZone = local?.type === 'toilet' || local?.type === 'exit' || local?.type === 'transition' || local?.type === 'lift' || local?.type === 'stairs' || local?.type === 'reception';
 
   const onSave = async () => {
     if (!local) return;
@@ -132,7 +129,7 @@ export const ZoneEditModal = ({ facilityId }: { facilityId: string }) => {
             />
           </div>
 
-          {!isToilet && (
+          {!isFreeZone && (
             <div className="grid gap-2">
               <Label>Лікарі</Label>
               <Select

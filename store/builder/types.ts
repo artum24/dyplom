@@ -6,7 +6,7 @@ export type ZoneType =
   | 'isolation'
   | 'toilet'
   | 'reception'
-  | 'exit';
+  | 'exit' | 'lift' | 'stairs' | 'transition';
 
 export interface Zone {
   id: string;
