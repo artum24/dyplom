@@ -7,6 +7,7 @@ import { useModal } from '@/store/modal/modal';
 import { useMapBuilder } from '@/store/builder/builder';
 import { cn } from '@/lib/utils/utils';
 import { Cell } from '@/lib/utils/routing';
+import { RouteSvg } from '@/components/ZoneGrid/components/RouteSvg';
 
 type ZoneGridProps = {
   layout: Layout[];
@@ -120,62 +121,63 @@ export const ZoneGrid = ({
         ) : (
           <>
             {/*// @ts-ignore*/}
-            <ReactGridLayout
-              className="layout h-full"
-              draggableCancel=".action"
-              layout={layout as unknown as Layout[]}
-              width={width}
-              cols={COLS}
-              maxRows={ROWS}
-              rowHeight={cellH}
-              margin={[1, 1]}
-              containerPadding={[0, 0]}
-              compactType={null}
-              preventCollision
-              isBounded={false}
-            >
-              {zones.map((zone) => {
-                const isActive = !!activeZones?.find((z) => z.id === zone.id);
-                return (
-                  <div key={zone.id}>
-                    <ZoneCard
-                      isActive={isActive}
-                      isView={true}
-                      zone={zone}
-                    />
-                  </div>
-                );
-              })}
-            </ReactGridLayout>
-            <svg className="pointer-events-none absolute inset-0" width="100%" height="100%">
-              {poly.length >= 2 && (
-                <g>
-                  <defs>
-                    <linearGradient id="route-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                      <stop offset="0%" stopColor="#4facfe" />
-                      <stop offset="100%" stopColor="#00f2fe" />
-                    </linearGradient>
-                  </defs>
-                  <polyline
-                    points={poly.map(p => `${p.x},${p.y}`).join(' ')}
-                    fill="none"
-                    stroke="url(#route-gradient)"
-                    strokeWidth={4}
-                    strokeDasharray="12 8"
-                  >
-                    <animate
-                      attributeName="stroke-dashoffset"
-                      from="0"
-                      to="-100"
-                      dur="5s"
-                      repeatCount="indefinite"
-                    />
-                  </polyline>
-                  <circle cx={poly[0].x} cy={poly[0].y} r={5} fill="#4facfe" />
-                  <circle cx={poly[poly.length - 1].x} cy={poly[poly.length - 1].y} r={6} fill="#00f2fe" />
-                </g>
-              )}
-            </svg>
+              <ReactGridLayout
+                className="layout h-full"
+                draggableCancel=".action"
+                layout={layout as unknown as Layout[]}
+                width={width}
+                cols={COLS}
+                maxRows={ROWS}
+                rowHeight={cellH}
+                margin={[1, 1]}
+                containerPadding={[0, 0]}
+                compactType={null}
+                preventCollision
+                isBounded={false}
+              >
+                {zones.map((zone) => {
+                  const isActive = !!activeZones?.find((z) => z.id === zone.id);
+                  return (
+                    <div key={zone.id}>
+                      <ZoneCard
+                        isActive={isActive}
+                        isView={true}
+                        zone={zone}
+                      />
+                    </div>
+                  );
+                })}
+              </ReactGridLayout>
+              <RouteSvg poly={poly} />
+              <svg className="pointer-events-none absolute inset-0" width="100%" height="100%">
+                {poly.length >= 2 && (
+                  <g>
+                    <defs>
+                      <linearGradient id="route-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" stopColor="#4facfe" />
+                        <stop offset="100%" stopColor="#00f2fe" />
+                      </linearGradient>
+                    </defs>
+                    <polyline
+                      points={poly.map(p => `${p.x},${p.y}`).join(' ')}
+                      fill="none"
+                      stroke="url(#route-gradient)"
+                      strokeWidth={4}
+                      strokeDasharray="12 8"
+                    >
+                      <animate
+                        attributeName="stroke-dashoffset"
+                        from="0"
+                        to="-100"
+                        dur="5s"
+                        repeatCount="indefinite"
+                      />
+                    </polyline>
+                    <circle cx={poly[0].x} cy={poly[0].y} r={5} fill="#4facfe" />
+                    <circle cx={poly[poly.length - 1].x} cy={poly[poly.length - 1].y} r={6} fill="#00f2fe" />
+                  </g>
+                )}
+              </svg>
           </>
         )}
       </div>
