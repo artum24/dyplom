@@ -113,14 +113,14 @@ export default function PatientFacilityNavigator() {
                   <ZoneGrid
                     activeZones={query.trim().toLowerCase().length ? activeZones : []}
                     layout={layout}
-                    zones={zonesOnFloor as any}
+                    zones={zonesOnFloor}
                     floor={floor as unknown as Floor}
                     isEditable={false}
                     pathCells={pathByFloor[floor.id] || []}   // ⬅️ нове
                   />
                   <Legend />
                 </div>
-                <DoctorSidebar zonesOnFloor={activeZones as any} onPickDoctor={handlePickDoctor} />
+                <DoctorSidebar zonesOnFloor={zonesOnFloor} onPickDoctor={handlePickDoctor} />
               </div>
             </TabsContent>
           ))}
