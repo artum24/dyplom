@@ -19,7 +19,6 @@ export default function PatientFacilityNavigator() {
   const params = useParams();
   const facilityId = params.facilityId as string;
 
-
   const [query, setQuery] = useState('');
   const [pathByFloor, setPathByFloor] = useState<Record<string, Cell[]>>({});
 

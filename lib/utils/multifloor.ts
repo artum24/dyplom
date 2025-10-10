@@ -1,8 +1,8 @@
 import { Zone } from '@/store/builder/types';
 import { COLS, ROWS } from '@/app/(app)/builder/[facilityId]/components/FloorEditor/constants';
-import { pickReception } from '@/lib/utils/routing';
 import { buildRouteSingleFloorCorridor } from '@/lib/utils/buildRoute';
 import { MinHeap } from '@/lib/utils/MinHeap';
+import { pickReception } from '@/lib/utils/routing';
 
 export type Cell = { x: number; y: number };
 
@@ -109,21 +109,26 @@ export function centerCellOf(z: Zone): Cell {
   return { x: Math.round(z.x + z.width / 2), y: Math.round(z.y + z.height / 2) };
 }
 
-function pickPortalPair(startFloorPortals: Zone[], targetFloorPortals: Zone[], start: Zone, target: Zone) {
+function makePortalPairs(
+  startFloorPortals: Zone[],
+  targetFloorPortals: Zone[],
+  start: Zone,
+  target: Zone,
+) {
   const S = startFloorPortals, T = targetFloorPortals;
-  if (!S.length || !T.length) return null;
-
-  let best: { a: Zone; b: Zone; score: number } | null = null;
   const sC = centerCellOf(start), tC = centerCellOf(target);
+  const pairs: Array<{ a: Zone; b: Zone; score: number }> = [];
+
   for (const a of S) for (const b of T) {
     const keyMatch = a.type === b.type;
-    const p = keyMatch ? 0 : 20;
-    const d1 = Math.abs(centerCellOf(a).x - sC.x) + Math.abs(centerCellOf(a).y - sC.y);
-    const d2 = Math.abs(centerCellOf(b).x - tC.x) + Math.abs(centerCellOf(b).y - tC.y);
-    const score = d1 + d2 + p;
-    if (!best || score < best.score) best = { a, b, score };
+    if (keyMatch) {
+      const d1 = Math.abs(centerCellOf(a).x - sC.x) + Math.abs(centerCellOf(a).y - sC.y);
+      const d2 = Math.abs(centerCellOf(b).x - tC.x) + Math.abs(centerCellOf(b).y - tC.y);
+      pairs.push({ a, b, score: d1 + d2 + 20 });
+    }
   }
-  return best;
+  pairs.sort((x, y) => x.score - y.score);
+  return pairs;
 }
 
 export function erodeOnce(occWalls: boolean[][]): boolean[][] {
@@ -144,7 +149,8 @@ export function erodeOnce(occWalls: boolean[][]): boolean[][] {
 }
 
 export function buildMultiFloorRoute(
-  allZones: Zone[], targetZoneId: string,
+  allZones: Zone[],
+  targetZoneId: string,
 ): { byFloor: Record<string, Cell[]> } {
   const start = pickReception(allZones);
   const target = allZones.find(z => String(z.id) === String(targetZoneId));
@@ -158,19 +164,35 @@ export function buildMultiFloorRoute(
 
   const S = allZones.filter(z => z.floor_id === start.floor_id && isPortal(z));
   const T = allZones.filter(z => z.floor_id === target.floor_id && isPortal(z));
-  const best = pickPortalPair(S, T, start, target);
-  if (!best) return { byFloor: {} };
-  const byFloor: Record<string, Cell[]> = {};
+  if (!S.length || !T.length) return { byFloor: {} };
 
-  byFloor[start.floor_id] = buildRouteSingleFloorCorridor(
-    allZones.filter(z => z.floor_id === start.floor_id),
-    start, best.a,
-  );
+  const pairs = makePortalPairs(S, T, start, target);
 
-  byFloor[target.floor_id] = buildRouteSingleFloorCorridor(
-    allZones.filter(z => z.floor_id === target.floor_id),
-    best.b, target,
-  );
-  console.log(byFloor, start, best.a, best.b, target, allZones);
-  return { byFloor };
+  let bestResult: { byFloor: Record<string, Cell[]>; total: number } | null = null;
+
+  for (const pair of pairs) {
+    const byFloor: Record<string, Cell[]> = {};
+
+    const zonesStart = allZones.filter(z => z.floor_id === start.floor_id);
+    const leg1 = buildRouteSingleFloorCorridor(
+      zonesStart, start, pair.a,
+    );
+
+    if (!leg1.length || leg1.length <= 1) continue;
+    const zonesTarget = allZones.filter(z => z.floor_id === target.floor_id);
+    const leg2 = buildRouteSingleFloorCorridor(
+      zonesTarget, pair.b, target,
+    );
+
+    if (!leg2.length || leg1.length <= 1) continue;
+    byFloor[start.floor_id] = leg1;
+    byFloor[target.floor_id] = leg2;
+
+    const total = leg1.length + leg2.length + pair.score;
+    if (!bestResult || total < bestResult.total) {
+      bestResult = { byFloor, total };
+    }
+  }
+
+  return bestResult ? { byFloor: bestResult.byFloor } : { byFloor: {} };
 }
