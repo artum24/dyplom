@@ -157,8 +157,7 @@ export function buildMultiFloorRoute(
   if (!start || !target) return { byFloor: {} };
 
   if (start.floor_id === target.floor_id) {
-    const zonesOn = allZones.filter(z => z.floor_id === start.floor_id);
-    const path = buildRouteSingleFloorCorridor(zonesOn, start, target);
+    const path = buildRouteSingleFloorCorridor(start.floor_id, start, target);
     return { byFloor: { [start.floor_id]: path } };
   }
 
@@ -173,15 +172,13 @@ export function buildMultiFloorRoute(
   for (const pair of pairs) {
     const byFloor: Record<string, Cell[]> = {};
 
-    const zonesStart = allZones.filter(z => z.floor_id === start.floor_id);
     const leg1 = buildRouteSingleFloorCorridor(
-      zonesStart, start, pair.a,
+      start.floor_id, start, pair.a,
     );
 
     if (!leg1.length || leg1.length <= 1) continue;
-    const zonesTarget = allZones.filter(z => z.floor_id === target.floor_id);
     const leg2 = buildRouteSingleFloorCorridor(
-      zonesTarget, pair.b, target,
+      target.floor_id, pair.b, target,
     );
 
     if (!leg2.length || leg1.length <= 1) continue;

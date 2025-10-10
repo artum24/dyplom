@@ -2,9 +2,18 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useViewClinic } from '@/store/viewClinic/viewClinic';
 import type { Floor, Zone } from '@/store/builder/types';
+import { buildCorridor } from '@/lib/utils/buildCorridor';
 
 export const useFacilityData = (facilityId: string) => {
-  const { floors, stateFacilityId, setStateFacilityId, setFloors, setSelectedFloorId, setZones } = useViewClinic();
+  const {
+    floors,
+    stateFacilityId,
+    setStateFacilityId,
+    setFloors,
+    setSelectedFloorId,
+    setZones,
+    setFloorsCorridor,
+  } = useViewClinic();
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -36,6 +45,18 @@ export const useFacilityData = (facilityId: string) => {
         setStateFacilityId(facilityId);
         setSelectedFloorId(floors?.[0]?.id as string);
         setZones(zones as unknown as Zone[]);
+        const floorsZones = {} as Record<string, Zone[]>;
+        // @ts-ignore
+        zones?.forEach((zone: Zone) => {
+          floorsZones[zone.floor_id] = [...(floorsZones?.[zone?.floor_id] || []), zone];
+        });
+        console.log(floorsZones);
+        const floorCorridor = {} as Record<string, boolean[][]>;
+        for (const [floorId, floorZones] of Object.entries(floorsZones)) {
+          floorCorridor[floorId] = buildCorridor(floorZones);
+        }
+        console.log(floorCorridor);
+        setFloorsCorridor(floorCorridor);
         setLoading(false);
       })();
     }

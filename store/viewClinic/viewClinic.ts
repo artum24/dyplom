@@ -1,8 +1,6 @@
 import { create } from 'zustand';
 import type { Doctor, Floor, Zone } from '../builder/types';
 
-export type ViewConnection = { from_zone_id: string; to_zone_id: string; weight?: number };
-
 interface ViewClinicState {
   stateFacilityId: string | null;
 
@@ -13,6 +11,8 @@ interface ViewClinicState {
   selectedZoneId: string | null;
 
   doctors: Doctor[];
+
+  floorsCorridor: Record<string, boolean[][]>;
 
   activePathZoneIds: string[];
   startZoneId: string | null;
@@ -28,6 +28,8 @@ interface ViewClinicState {
   setActivePathZoneIds: (ids: string[]) => void;
   setStartZoneId: (id: string | null) => void;
   setActivePathByFloor: (m: Record<string, { x: number; y: number }[]>) => void;
+
+  setFloorsCorridor: (floorsCorridor: Record<string, boolean[][]>) => void;
 }
 
 export const useViewClinic = create<ViewClinicState>()((set) => ({
@@ -35,7 +37,7 @@ export const useViewClinic = create<ViewClinicState>()((set) => ({
   doctors: [],
   floors: [],
   selectedFloorId: null,
-
+  floorsCorridor: {},
   zones: [],
   selectedZoneId: null,
 
@@ -53,4 +55,5 @@ export const useViewClinic = create<ViewClinicState>()((set) => ({
   setActivePathZoneIds: (ids) => set({ activePathZoneIds: ids }),
   setStartZoneId: (id) => set({ startZoneId: id }),
   setActivePathByFloor: (m) => set({ activePathByFloor: m }),
+  setFloorsCorridor: (floorsCorridor) => set({ floorsCorridor }),
 }));
