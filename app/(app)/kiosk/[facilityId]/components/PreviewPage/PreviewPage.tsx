@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/Tabs/Tabs';
 import { Header } from '@/app/(app)/kiosk/[facilityId]/components/PreviewPage/components/Header/Header';
 import { Actions } from '@/app/(app)/kiosk/[facilityId]/components/PreviewPage/components/Actions/Actions';
@@ -12,7 +12,8 @@ import { ZoneGrid } from '@/components/ZoneGrid/ZoneGrid';
 import { useParams } from 'next/navigation';
 import { useViewClinic } from '@/store/viewClinic/viewClinic';
 import { useFacilityData } from '@/app/(app)/kiosk/[facilityId]/components/PreviewPage/hooks/useFacilityData';
-import { buildPathClient, defaultStartZoneId } from '@/lib/helpers/pathFinding';
+import { buildMultiFloorRoute } from '@/lib/utils/multifloor';
+import { Cell } from '@/lib/utils/routing';
 
 export default function PatientFacilityNavigator() {
   const params = useParams();
@@ -20,27 +21,15 @@ export default function PatientFacilityNavigator() {
 
 
   const [query, setQuery] = useState('');
-
+  const [pathByFloor, setPathByFloor] = useState<Record<string, Cell[]>>({});
 
   useFacilityData(facilityId);
-  const {
-    selectedFloorId,
-    zones,
-    floors,
-    setSelectedFloorId,
-    activePathZoneIds,
-    setActivePathZoneIds,
-    startZoneId,
-    setStartZoneId,
-  } = useViewClinic();
+  const { selectedFloorId, zones, floors, setSelectedFloorId } = useViewClinic();
 
-  useEffect(() => {
-    if (!startZoneId && zones.length) setStartZoneId(defaultStartZoneId(zones));
-  }, [zones, startZoneId, setStartZoneId]);
-
-
-  const zonesOnFloor = useMemo(() => zones.filter((z) => z.floor_id === selectedFloorId), [selectedFloorId, zones]);
-
+  const zonesOnFloor = useMemo(
+    () => zones.filter((z) => z.floor_id === selectedFloorId),
+    [selectedFloorId, zones],
+  );
 
   const allDoctors = useMemo(() => {
     const acc: Array<{
@@ -49,14 +38,12 @@ export default function PatientFacilityNavigator() {
       specialty?: string | null;
       zone_id: string;
       floor_id: string;
-      zone_subtitle?: string | null;
     }> = [];
     const seen = new Set<string>();
     for (const z of zones) {
       z.zone_doctors?.forEach((rel: any) => {
         const d = rel.doctors;
-        if (!d) return;
-        if (seen.has(d.id)) return;
+        if (!d || seen.has(d.id)) return;
         seen.add(d.id);
         acc.push({
           id: d.id,
@@ -64,7 +51,6 @@ export default function PatientFacilityNavigator() {
           specialty: d.specialty ?? null,
           zone_id: String(z.id),
           floor_id: String(z.floor_id),
-          zone_subtitle: z.subtitle ?? null,
         });
       });
     }
@@ -78,31 +64,29 @@ export default function PatientFacilityNavigator() {
     return zonesOnFloor.filter(
       (z: any) =>
         z?.subtitle?.toLowerCase().includes(q) ||
-        z.zone_doctors?.some((d: any) => d.doctors.full_name.toLowerCase().includes(q) || d.doctors.specialty?.toLowerCase().includes(q)),
+        z.zone_doctors?.some((d: any) =>
+          d.doctors.full_name.toLowerCase().includes(q) ||
+          d.doctors.specialty?.toLowerCase().includes(q),
+        ),
     );
   }, [zonesOnFloor, query]);
 
-
-  const layout = zonesOnFloor.map((zone: any) => ({
-    i: zone.id,
-    x: zone.x,
-    y: zone.y,
-    w: zone.width,
-    h: zone.height,
-    minW: zone.minW || 2,
-    minH: zone.minH || 2,
-    isDraggable: false,
-    isResizable: false,
+  const layout = zonesOnFloor.map((zone) => ({
+    i: zone.id, x: zone.x, y: zone.y, w: zone.width, h: zone.height,
+    minW: zone.minW || 2, minH: zone.minH || 2, isDraggable: false, isResizable: false,
   }));
-
 
   const handlePickDoctor = (doctorId: string) => {
     const picked = allDoctors.find((d) => d.id === doctorId);
     if (!picked) return;
-    const startId = startZoneId || defaultStartZoneId(zones) || picked.zone_id;
-    const path = buildPathClient(String(startId), String(picked.zone_id), zones as any);
-    setActivePathZoneIds(path);
-    if (picked.floor_id && picked.floor_id !== selectedFloorId) setSelectedFloorId(picked.floor_id);
+    const { byFloor } = buildMultiFloorRoute(
+      zones, picked.zone_id,
+    );
+
+    setPathByFloor(byFloor);
+    if (picked.floor_id && picked.floor_id !== selectedFloorId) {
+      setSelectedFloorId(picked.floor_id);
+    }
     setQuery(picked.full_name);
   };
 
@@ -133,7 +117,7 @@ export default function PatientFacilityNavigator() {
                     zones={zonesOnFloor as any}
                     floor={floor as unknown as Floor}
                     isEditable={false}
-                    pathZoneIds={activePathZoneIds}
+                    pathCells={pathByFloor[floor.id] || []}   // ⬅️ нове
                   />
                   <Legend />
                 </div>

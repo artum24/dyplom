@@ -6,6 +6,7 @@ import { ZoneCard } from '@/app/(app)/builder/[facilityId]/components/ZoneCard/Z
 import { useModal } from '@/store/modal/modal';
 import { useMapBuilder } from '@/store/builder/builder';
 import { cn } from '@/lib/utils/utils';
+import { Cell } from '@/lib/utils/routing';
 
 type ZoneGridProps = {
   layout: Layout[];
@@ -16,7 +17,7 @@ type ZoneGridProps = {
   zones: Zone[];
   isEditable: boolean;
   activeZones?: Zone[];
-  pathZoneIds?: string[]
+  pathCells?: Cell[];
 };
 
 export const ZoneGrid = ({
@@ -28,7 +29,7 @@ export const ZoneGrid = ({
                            floor,
                            isEditable,
                            activeZones,
-                           pathZoneIds = [],
+                           pathCells = [],
                          }: ZoneGridProps) => {
   const ref = useRef<HTMLDivElement>(null);
   const { openZoneEdit } = useModal();
@@ -52,33 +53,17 @@ export const ZoneGrid = ({
   }, [floor, zones, layout]);
 
   const innerW = width - PADDING[0] * 2 - MARGIN[0] * (COLS - 1);
+  const innerH = height - PADDING[1] * 2 - MARGIN[1] * (ROWS - 1);
 
   const cellW = Math.max(20, innerW / COLS);
-  const cellH = Math.max(20, height / ROWS);
+  const cellH = Math.max(20, innerH / ROWS);
 
-  const [centers, setCenters] = useState<Record<string, { x: number; y: number }>>({});
-  useEffect(() => {
-    const container = ref.current;
-    if (!container) return;
-    const rect = container.getBoundingClientRect();
-    const next: Record<string, { x: number; y: number }> = {};
-    zones.forEach((z) => {
-      const el = container.querySelector<HTMLElement>(`[data-zone-id="${z.id}"]`);
-      if (!el) return;
-      const r = el.getBoundingClientRect();
-      next[z.id] = { x: r.left - rect.left + r.width / 2, y: r.top - rect.top + r.height / 2 };
-    });
-    setCenters(next);
-  }, [zones, width, height, layout]);
+  const toPx = (c: { x: number; y: number }) => ({
+    x: PADDING[0] + c.x * (cellW + MARGIN[0]) + cellW / 2,
+    y: PADDING[1] + c.y * (cellH) + cellH / 2,
+  });
 
-
-  const visibleSegments = useMemo(() => {
-    const ids = pathZoneIds.filter((id) => zones.some((z) => z.id === id));
-    const segs: Array<[string, string]> = [];
-    for (let i = 1; i < ids.length; i++) segs.push([ids[i - 1], ids[i]]);
-    return segs;
-  }, [pathZoneIds, zones]);
-
+  const poly = useMemo(() => pathCells.map(toPx), [pathCells, cellW, cellH, width, height]);
   return (
     <div className="relative mx-auto w-full overflow-hidden rounded-md border bg-white">
       <div
@@ -89,11 +74,11 @@ export const ZoneGrid = ({
         })}
         style={{
           backgroundImage: `
-              linear-gradient(to right, rgba(255,255,255,0.9) 1px, transparent 1px),
-              linear-gradient(to bottom, rgba(255,255,255,0.9) 1px, transparent 1px)
-            `,
-          backgroundSize: `${cellW + MARGIN[0]}px ${cellH}px`,
-          backgroundPosition: `${0}px ${0}px`,
+            linear-gradient(to right, rgba(255,255,255,0.9) 1px, transparent 1px),
+            linear-gradient(to bottom, rgba(255,255,255,0.9) 1px, transparent 1px)
+          `,
+          backgroundSize: `${cellW + MARGIN[0]}px ${cellH + MARGIN[1]}px`, // ← додали MARGIN[1]
+          backgroundPosition: `0px 0px`,
         }}
       >
         {isEditable ? (
@@ -163,19 +148,23 @@ export const ZoneGrid = ({
               })}
             </ReactGridLayout>
             <svg className="pointer-events-none absolute inset-0" width="100%" height="100%">
-              {visibleSegments.map(([a, b], i) => {
-                const A = centers[a], B = centers[b];
-                if (!A || !B) return null;
-                return (
-                  <g key={`${a}-${b}-${i}`}>
-                    {/* corridor-first look: thicker base + dashed shadow to імітувати напрямок */}
-                    <line x1={A.x} y1={A.y} x2={B.x} y2={B.y} strokeWidth={6} stroke="rgba(0,0,0,0.12)" />
-                    <line x1={A.x} y1={A.y} x2={B.x} y2={B.y} strokeWidth={4} stroke="currentColor" />
-                    <circle cx={A.x} cy={A.y} r={4} fill="currentColor" />
-                    {i === visibleSegments.length - 1 && <circle cx={B.x} cy={B.y} r={6} fill="currentColor" />}
-                  </g>
-                );
-              })}
+              {poly.length >= 2 && (
+                <g>
+                  {/* тінь */}
+                  <polyline
+                    points={poly.map(p => `${p.x},${p.y}`).join(' ')}
+                    fill="none" stroke="rgba(0,0,0,0.12)" strokeWidth={6}
+                  />
+                  {/* основна лінія */}
+                  <polyline
+                    points={poly.map(p => `${p.x},${p.y}`).join(' ')}
+                    fill="none" stroke="currentColor" strokeWidth={4}
+                  />
+                  {/* точки початку/кінця */}
+                  <circle cx={poly[0].x} cy={poly[0].y} r={4} fill="currentColor" />
+                  <circle cx={poly[poly.length - 1].x} cy={poly[poly.length - 1].y} r={6} fill="currentColor" />
+                </g>
+              )}
             </svg>
           </>
         )}

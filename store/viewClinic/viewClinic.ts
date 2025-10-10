@@ -1,26 +1,22 @@
 import { create } from 'zustand';
 import type { Doctor, Floor, Zone } from '../builder/types';
 
-
 export type ViewConnection = { from_zone_id: string; to_zone_id: string; weight?: number };
-
 
 interface ViewClinicState {
   stateFacilityId: string | null;
 
-
   floors: Omit<Floor, 'zones'>[];
   selectedFloorId: string | null;
 
-
   zones: Zone[];
   selectedZoneId: string | null;
-
 
   doctors: Doctor[];
 
   activePathZoneIds: string[];
   startZoneId: string | null;
+  activePathByFloor: Record<string, { x: number; y: number }[]>;
 
   setDoctors: (doctors: Doctor[]) => void;
   setStateFacilityId: (id: string | null) => void;
@@ -31,8 +27,8 @@ interface ViewClinicState {
 
   setActivePathZoneIds: (ids: string[]) => void;
   setStartZoneId: (id: string | null) => void;
+  setActivePathByFloor: (m: Record<string, { x: number; y: number }[]>) => void;
 }
-
 
 export const useViewClinic = create<ViewClinicState>()((set) => ({
   stateFacilityId: null,
@@ -40,13 +36,12 @@ export const useViewClinic = create<ViewClinicState>()((set) => ({
   floors: [],
   selectedFloorId: null,
 
-
   zones: [],
   selectedZoneId: null,
 
   activePathZoneIds: [],
   startZoneId: null,
-
+  activePathByFloor: {},
 
   setStateFacilityId: (id) => set({ stateFacilityId: id }),
   setDoctors: (doctors) => set({ doctors }),
@@ -55,7 +50,7 @@ export const useViewClinic = create<ViewClinicState>()((set) => ({
   setZones: (zones) => set({ zones }),
   setSelectedZoneId: (id) => set({ selectedZoneId: id }),
 
-
   setActivePathZoneIds: (ids) => set({ activePathZoneIds: ids }),
   setStartZoneId: (id) => set({ startZoneId: id }),
+  setActivePathByFloor: (m) => set({ activePathByFloor: m }),
 }));
