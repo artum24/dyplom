@@ -3,7 +3,6 @@ import type { Floor, Zone } from './types';
 import { supabase } from '@/lib/supabase';
 import { PresetType } from '@/app/(app)/builder/[facilityId]/components/Palette/Palette';
 import { Layout } from 'react-grid-layout';
-import { setZoneDoctors } from '@/lib/data/zones';
 import { toast } from 'sonner';
 
 interface MapBuilderState {
@@ -160,42 +159,80 @@ export const useMapBuilder = create<MapBuilderState>()((set, get) => ({
   },
 
   saveZonesToDatabase: async (floorId: string) => {
+    const ensureZoneId = (zone: any) => ({
+      ...zone,
+      id: zone.id ?? crypto.randomUUID(),
+    });
+
     const { floors, selectedFloorIndex } = get();
     if (selectedFloorIndex === null) return;
 
     const floor = floors[selectedFloorIndex];
     if (!floor || floor.id !== floorId) return;
 
-    const { zones } = floor;
+    const zones = floor.zones ?? [];
 
     try {
-      await supabase.from('zones').delete().eq('floor_id', floorId);
+      const zonesWithId = zones.map(ensureZoneId);
+      const keepIds = zonesWithId.map((z) => z.id);
 
-      if (zones && zones.length > 0) {
-        const zonesToSave = zones.map((zone) => {
-          const { zone_doctors, ...updatedZone } = zone;
-          return { ...updatedZone };
-        });
-        const { error } = await supabase.from('zones').insert(zonesToSave);
-        const doctors = zones.map((zone) => ({
-          zoneId: zone.id,
-          doctorIds: (zone?.zone_doctors || [])?.map((doctor) => doctor.doctor_id),
-        }));
+      const zonesToSave = zonesWithId.map(({ zone_doctors, ...rest }) => ({
+        ...rest,
+        floor_id: floorId,
+      }));
 
-        doctors.map((doctor) => {
-          setZoneDoctors(doctor.zoneId, doctor.doctorIds);
-        });
-        if (error) {
-          console.error(error);
-        }
+      const { error: upsertErr } = await supabase
+        .from('zones')
+        .upsert(zonesToSave, { onConflict: 'id' });
+      if (upsertErr) throw upsertErr;
+
+      if (keepIds.length > 0) {
+        const { error: cleanupErr } = await supabase
+          .from('zones')
+          .delete()
+          .eq('floor_id', floorId)
+          .not('id', 'in', `(${keepIds.join(',')})`);
+        if (cleanupErr) throw cleanupErr;
+      } else {
+        const { error: wipeErr } = await supabase
+          .from('zones')
+          .delete()
+          .eq('floor_id', floorId);
+        if (wipeErr) throw wipeErr;
       }
+
+      const allDoctorRows = zonesWithId.flatMap((zone) =>
+        (zone.zone_doctors ?? []).map((d: any) => ({
+          zone_id: zone.id,
+          doctor_id: d.doctor_id,
+        })),
+      );
+
+      if (keepIds.length > 0) {
+        const { error: delLinksErr } = await supabase
+          .from('zone_doctors')
+          .delete()
+          .in('zone_id', keepIds);
+        if (delLinksErr) throw delLinksErr;
+      }
+
+      if (allDoctorRows.length > 0) {
+        const { error: insLinksErr } = await supabase
+          .from('zone_doctors')
+          .insert(allDoctorRows);
+        if (insLinksErr) throw insLinksErr;
+      }
+
       toast('Зони успішно збережено!');
     } catch (error) {
       toast(
-        `Помилка при збереженні зон: ${error instanceof Error ? error.message : 'Невідома помилка'}`
+        `Помилка при збереженні зон: ${
+          error instanceof Error ? error.message : 'Невідома помилка'
+        }`,
       );
     }
   },
+
 
   loadZonesForFloor: async (floorId: string) => {
     try {
@@ -203,19 +240,19 @@ export const useMapBuilder = create<MapBuilderState>()((set, get) => ({
         .from('zones')
         .select(
           `
-              id, floor_id, type, x, y, width, height, color, subtitle, description, time_to, time_from,
+              id, floor_id, type, x, y, width, height, color, subtitle, description, time_to, time_from, isOpen, isAdaptive,
               zone_doctors (
                 doctor_id,
                 doctors (id, full_name, specialty, email, phone)
               )
-          `
+          `,
         )
         .eq('floor_id', floorId);
       if (error) console.error(error);
 
       const { floors } = get();
       const newFloors = floors.map((floor) =>
-        floor.id === floorId ? { ...floor, zones: data } : floor
+        floor.id === floorId ? { ...floor, zones: data } : floor,
       );
       set({ floors: newFloors as Floor[] });
     } catch (e) {

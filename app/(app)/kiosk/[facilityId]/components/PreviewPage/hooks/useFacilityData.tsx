@@ -13,6 +13,7 @@ export const useFacilityData = (facilityId: string) => {
     setSelectedFloorId,
     setZones,
     setFloorsCorridor,
+    reset,
   } = useViewClinic();
   const [loading, setLoading] = useState(false);
 
@@ -32,7 +33,7 @@ export const useFacilityData = (facilityId: string) => {
           .from('zones')
           .select(
             `
-              id, floor_id, type, x, y, width, height, color, subtitle, description, time_to, time_from,
+              id, floor_id, type, x, y, width, height, color, subtitle, description, time_to, time_from, isAdaptive, isOpen,
               zone_doctors (
                 doctor_id,
                 doctors (id, full_name, specialty, email, phone)
@@ -62,6 +63,9 @@ export const useFacilityData = (facilityId: string) => {
     }
   }, [facilityId]);
 
+  useEffect(() => {
+    return () => reset();
+  }, []);
 
   return { loading };
 };

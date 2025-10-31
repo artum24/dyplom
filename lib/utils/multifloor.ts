@@ -10,10 +10,6 @@ export function makeEmptyMask() {
   return Array.from({ length: ROWS }, () => Array<boolean>(COLS).fill(false));
 }
 
-// const NON_BLOCKING = new Set([
-//   'transition',
-// ]);
-
 export function aStarRoute(
   occWalls: boolean[][],
   start: Cell, goal: Cell,
@@ -103,7 +99,7 @@ function compressCollinear(path: Cell[]): Cell[] {
   return out;
 }
 
-const isPortal = (z: Zone) => ['stairs', 'lift'].includes(z.type);
+const isPortal = (z: Zone, isAdaptive?: boolean) => ['stairs', 'lift'].includes(z.type) && z.isOpen && (isAdaptive ? z.isAdaptive : true);
 
 export function centerCellOf(z: Zone): Cell {
   return { x: Math.round(z.x + z.width / 2), y: Math.round(z.y + z.height / 2) };
@@ -151,6 +147,7 @@ export function erodeOnce(occWalls: boolean[][]): boolean[][] {
 export function buildMultiFloorRoute(
   allZones: Zone[],
   targetZoneId: string,
+  isAdaptive: boolean,
 ): { byFloor: Record<string, Cell[]> } {
   const start = pickReception(allZones);
   const target = allZones.find(z => String(z.id) === String(targetZoneId));
@@ -161,8 +158,9 @@ export function buildMultiFloorRoute(
     return { byFloor: { [start.floor_id]: path } };
   }
 
-  const S = allZones.filter(z => z.floor_id === start.floor_id && isPortal(z));
-  const T = allZones.filter(z => z.floor_id === target.floor_id && isPortal(z));
+  const S = allZones.filter(z => z.floor_id === start.floor_id && isPortal(z, isAdaptive));
+  const T = allZones.filter(z => z.floor_id === target.floor_id && isPortal(z, isAdaptive));
+
   if (!S.length || !T.length) return { byFloor: {} };
 
   const pairs = makePortalPairs(S, T, start, target);

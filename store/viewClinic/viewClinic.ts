@@ -30,6 +30,7 @@ interface ViewClinicState {
   setActivePathByFloor: (m: Record<string, { x: number; y: number }[]>) => void;
 
   setFloorsCorridor: (floorsCorridor: Record<string, boolean[][]>) => void;
+  reset: () => void;
 }
 
 export const useViewClinic = create<ViewClinicState>()((set) => ({
@@ -56,4 +57,18 @@ export const useViewClinic = create<ViewClinicState>()((set) => ({
   setStartZoneId: (id) => set({ startZoneId: id }),
   setActivePathByFloor: (m) => set({ activePathByFloor: m }),
   setFloorsCorridor: (floorsCorridor) => set({ floorsCorridor }),
+
+  reset: () => set({
+    stateFacilityId: null,
+    doctors: [],
+    floors: [],
+    selectedFloorId: null,
+    floorsCorridor: {},
+    zones: [],
+    selectedZoneId: null,
+
+    activePathZoneIds: [],
+    startZoneId: null,
+    activePathByFloor: {},
+  }),
 }));

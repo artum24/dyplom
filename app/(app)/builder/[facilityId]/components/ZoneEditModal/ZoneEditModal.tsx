@@ -1,10 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { listDoctors } from '@/lib/data/doctors';
+import { useState } from 'react';
 import { useModal } from '@/store/modal/modal';
-import { useMapBuilder } from '@/store/builder/builder';
-import { Doctor, Zone, ZoneType } from '@/store/builder/types';
+import { Zone, ZoneType } from '@/store/builder/types';
 import { OptionType, Select } from '@/components/ui/Select/Select';
 import SelectUI, { MultiValue } from 'react-select';
 import { Calendar } from '@/components/ui/TimePicker/TimePicker';
@@ -12,8 +10,9 @@ import { Label } from '@/components/ui/Label/Label';
 import { Input } from '@/components/ui/Input/Input';
 import { Button } from '@/components/ui/Button/Button';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/Dialog/Dialog';
-import { PRESETS } from '@/app/(app)/builder/[facilityId]/components/Palette/Palette';
-import { toast } from 'sonner';
+import { Checkbox } from '@/components/ui/Checkbox/Checkbox';
+import { useSave } from '@/app/(app)/builder/[facilityId]/components/ZoneEditModal/useSave';
+import { useDoctors } from '@/app/(app)/builder/[facilityId]/components/ZoneEditModal/useDoctors';
 
 export const TYPE_OPTIONS: { value: ZoneType; label: string }[] = [
   { value: 'room', label: 'Кабінет' },
@@ -26,63 +25,28 @@ export const TYPE_OPTIONS: { value: ZoneType; label: string }[] = [
   { value: 'lift', label: 'Ліфт' },
   { value: 'stairs', label: 'Сходи' },
   { value: 'transition', label: 'Перехід' },
+  { value: 'wall', label: 'Стіна' },
 ];
 
 export const ZoneEditModal = ({ facilityId }: { facilityId: string }) => {
-  const { isZoneEditOpen, zoneForEdit, closeZoneEdit } = useModal();
-  const { updateZoneInCurrentFloor } = useMapBuilder();
+  const { isZoneEditOpen, zoneForEdit, closeZoneEdit, doctors } = useModal();
   const [local, setLocal] = useState<Zone | null>(null);
-  const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [selectedDoctors, setSelectedDoctors] = useState<string[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
+  const [isAdaptive, setIsAdaptive] = useState(false);
 
-  useEffect(() => {
-    (async () => {
-      try {
-        if (zoneForEdit) {
-          setLoading(true);
-          const docs = await listDoctors(facilityId);
-          setDoctors(docs);
-          setSelectedDoctors((zoneForEdit?.zone_doctors || []).map((doctor) => doctor.doctor_id));
-          setLocal(zoneForEdit);
-        }
-      } catch (e) {
-        console.error(e);
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, [facilityId, zoneForEdit]);
+  const { doctorsOptions } = useDoctors({
+    facilityId,
+    setIsAdaptive,
+    setIsOpen,
+    setSelectedDoctors,
+    setLocal,
+  });
 
-  const isFreeZone = local?.type === 'toilet' || local?.type === 'exit' || local?.type === 'transition' || local?.type === 'lift' || local?.type === 'stairs' || local?.type === 'reception';
+  const isFreeZone = local?.type === 'toilet' || local?.type === 'exit' || local?.type === 'transition' || local?.type === 'lift' || local?.type === 'stairs' || local?.type === 'reception' || local?.type === 'wall';
+  const isPortal = local?.type === 'lift' || local?.type === 'stairs';
 
-  const onSave = async () => {
-    if (!local) return;
-    try {
-      const zone_doctors = selectedDoctors.map((doctor_id) => ({
-        doctor_id,
-        doctors: doctors.find((doctor) => doctor.id === doctor_id),
-      })) as {
-        doctor_id: string;
-        doctors: Doctor;
-      }[];
-      const presetItem = PRESETS.find((item) => item.type === local.type);
-      const color = presetItem?.color as string;
-      const subtitle = presetItem?.label as string;
-
-      updateZoneInCurrentFloor({ ...local, color, subtitle, zone_doctors });
-      closeZoneEdit();
-      toast('Зона успішно збережена!');
-    } catch (e) {
-      console.error(e);
-      toast('Помилка збереження');
-    }
-  };
-
-  const doctorsOptions = doctors?.map((doctor) => ({
-    value: doctor.id,
-    label: doctor.full_name,
-  })) as OptionType[];
+  const { onSave } = useSave({ selectedDoctors, isOpen, isPortal, isAdaptive, doctors, local });
 
   return (
     <Dialog
@@ -95,8 +59,6 @@ export const ZoneEditModal = ({ facilityId }: { facilityId: string }) => {
         </DialogHeader>
 
         <div className="space-y-4">
-          {loading && <div className="text-sm text-gray-500">Завантаження…</div>}
-
           <div className="grid gap-2">
             <div className="grid gap-2">
               <Label>Тип</Label>
@@ -142,13 +104,26 @@ export const ZoneEditModal = ({ facilityId }: { facilityId: string }) => {
               <Calendar from={local?.time_from} to={local?.time_to} setValue={setLocal} />
             </div>
           )}
+          {isPortal && (
+            <div className="grid gap-2">
+              <div className="flex items-center gap-3">
+                <Checkbox id="isOpen" checked={isOpen} onCheckedChange={(value) => setIsOpen(value as boolean)} />
+                <Label htmlFor="terms">Відчинено</Label>
+              </div>
+              <div className="flex items-center gap-3">
+                <Checkbox id="isAdaptive" checked={isAdaptive}
+                          onCheckedChange={(value) => setIsAdaptive(value as boolean)} />
+                <Label htmlFor="terms">Адаптовано для осіб з інвалідністю.</Label>
+              </div>
+            </div>
+          )}
         </div>
         <DialogFooter>
           <div className="flex items-center justify-end gap-2">
-            <Button variant="outline" onClick={closeZoneEdit} disabled={loading}>
+            <Button variant="outline" onClick={closeZoneEdit}>
               Скасувати
             </Button>
-            <Button onClick={onSave} disabled={loading}>
+            <Button onClick={onSave}>
               Зберегти
             </Button>
           </div>

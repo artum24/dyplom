@@ -15,11 +15,10 @@ function buildBlockedMask(zonesOnFloor: Zone[]): boolean[][] {
   return blocked;
 }
 
-export function markOutdoorWithClosures(blocked: boolean[][], closures?: boolean[][]): boolean[][] {
+export function markOutdoorWithClosures(blocked: boolean[][]): boolean[][] {
   const out = makeEmptyMask();
   const q: Cell[] = [];
-  const isClosed = (x: number, y: number) => !!closures?.[y]?.[x];
-  const canStart = (x: number, y: number) => !blocked[y][x] && !isClosed(x, y);
+  const canStart = (x: number, y: number) => !blocked[y][x];
 
   for (let x = 0; x < COLS; x++) {
     if (canStart(x, 0)) {
@@ -48,7 +47,7 @@ export function markOutdoorWithClosures(blocked: boolean[][], closures?: boolean
     for (const [dx, dy] of dirs) {
       const nx = x + dx, ny = y + dy;
       if (nx < 0 || ny < 0 || nx >= COLS || ny >= ROWS) continue;
-      if (blocked[ny][nx] || out[ny][nx] || isClosed(nx, ny)) continue;
+      if (blocked[ny][nx] || out[ny][nx]) continue;
       out[ny][nx] = true;
       q.push({ x: nx, y: ny });
     }
@@ -56,11 +55,10 @@ export function markOutdoorWithClosures(blocked: boolean[][], closures?: boolean
   return out;
 }
 
-export function buildCorridorMask(blocked: boolean[][], outdoor: boolean[][], closures?: boolean[][]): boolean[][] {
+export function buildCorridorMask(blocked: boolean[][], outdoor: boolean[][]): boolean[][] {
   const corridor = makeEmptyMask();
   for (let y = 0; y < ROWS; y++) for (let x = 0; x < COLS; x++) {
-    const closed = !!closures?.[y]?.[x];
-    corridor[y][x] = !blocked[y][x] && !outdoor[y][x] && !closed;
+    corridor[y][x] = !blocked[y][x] && !outdoor[y][x];
   }
   return corridor;
 }

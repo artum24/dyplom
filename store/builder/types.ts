@@ -6,7 +6,7 @@ export type ZoneType =
   | 'isolation'
   | 'toilet'
   | 'reception'
-  | 'exit' | 'lift' | 'stairs' | 'transition';
+  | 'exit' | 'lift' | 'stairs' | 'transition' | 'wall';
 
 export interface Zone {
   id: string;
@@ -27,6 +27,8 @@ export interface Zone {
   }[];
   time_from?: string;
   time_to?: string;
+  isOpen?: boolean;
+  isAdaptive?: boolean;
 }
 
 export interface Floor {

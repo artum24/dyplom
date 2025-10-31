@@ -14,11 +14,13 @@ import { useViewClinic } from '@/store/viewClinic/viewClinic';
 import { useFacilityData } from '@/app/(app)/kiosk/[facilityId]/components/PreviewPage/hooks/useFacilityData';
 import { buildMultiFloorRoute } from '@/lib/utils/multifloor';
 import { Cell } from '@/lib/utils/routing';
+import { Checkbox } from '@/components/ui/Checkbox/Checkbox';
+import { Label } from '@/components/ui/Label/Label';
 
 export default function PatientFacilityNavigator() {
   const params = useParams();
   const facilityId = params.facilityId as string;
-
+  const [isAdaptive, setIsAdaptive] = useState(false);
   const [query, setQuery] = useState('');
   const [pathByFloor, setPathByFloor] = useState<Record<string, Cell[]>>({});
 
@@ -79,7 +81,7 @@ export default function PatientFacilityNavigator() {
     const picked = allDoctors.find((d) => d.id === doctorId);
     if (!picked) return;
     const { byFloor } = buildMultiFloorRoute(
-      zones, picked.zone_id,
+      zones, picked.zone_id, isAdaptive,
     );
 
     setPathByFloor(byFloor);
@@ -104,6 +106,10 @@ export default function PatientFacilityNavigator() {
                 </TabsTrigger>
               ))}
             </TabsList>
+            <div className="flex gap-2">
+              <Checkbox id="isAdaptive" onCheckedChange={(value) => setIsAdaptive(value as boolean)} />
+              <Label>Особа з обмеженими можливостями</Label>
+            </div>
           </div>
 
           {floors.map((floor) => (

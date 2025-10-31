@@ -3,11 +3,12 @@
 import { Zone } from '@/store/builder/types';
 import * as React from 'react';
 import { useState } from 'react';
-import { Clock, LogOut, Minus, SquarePen, Trash2, Users } from 'lucide-react';
+import { Clock, LockKeyhole, LogOut, Minus, SquarePen, Trash2, Users } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge/Badge';
 import { LiftIcon } from '@/components/icons/LiftIcon';
 import { StairsIcon } from '@/components/icons/StairsIcon';
 import { TransitionIcon } from '@/components/icons/TransitionIcon';
+import { isOpenSingleRange } from '@/app/(app)/builder/[facilityId]/components/ZoneCard/workingTimeRange';
 
 interface ZoneCardProps {
   zone: Zone;
@@ -39,21 +40,27 @@ export const ZoneCard = ({ isActive, zone, onEdit, onDelete, isView }: ZoneCardP
   const zoneLabel = zone.subtitle || getZoneTypeLabel(zone.type);
   const hasDoctors = zone.zone_doctors && zone.zone_doctors.length > 0;
   const hasWorkHours = zone.time_from && zone.time_to;
-  const isFreeZone = zone?.type === 'toilet' || zone?.type === 'exit' || zone?.type === 'transition' || zone?.type === 'lift' || zone?.type === 'stairs' || zone?.type === 'reception';
-
+  const isFreeZone = zone?.type === 'toilet' || zone?.type === 'exit' || zone?.type === 'transition' || zone?.type === 'lift' || zone?.type === 'stairs' || zone?.type === 'reception' || zone?.type === 'wall';
+  const isWall = zone?.type === 'wall';
   const doctors = zone?.zone_doctors || [];
+  const isClose = zone.isOpen === false || (zone?.time_from && zone?.time_to) ? !isOpenSingleRange(zone?.time_from || '', zone?.time_to || '', new Date()) : false;
   return (
     <div
       className="absolute inset-0 select-none overflow-visible"
       onMouseEnter={() => !isView && setShowActions(true)}
       onMouseLeave={() => !isView && setShowActions(false)}
     >
+      {isView && isClose && (
+        <LockKeyhole
+          className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" />
+      )}
       <div
-        className="relative flex h-full w-full flex-col p-2 text-black z-[1] overflow-hidden rounded-xl"
+        className={`relative flex h-full w-full flex-col p-2 text-black z-[1] overflow-hidden ${!isWall && 'rounded-xl'}`}
         style={{
           backgroundColor: isActive ? baseColor + '99' : baseColor + '44',
-          borderColor: isActive ? baseColor : baseColor + '88',
+          borderColor: isActive ? baseColor : isWall ? baseColor + '44' : baseColor + '88',
           borderWidth: 1,
+          opacity: (isView && isClose) ? 0.5 : 1,
         }}
       >
         <div className="flex items-center mb-1 gap-1">
@@ -61,7 +68,7 @@ export const ZoneCard = ({ isActive, zone, onEdit, onDelete, isView }: ZoneCardP
           {zone.type === 'lift' && <LiftIcon />}
           {zone.type === 'stairs' && <StairsIcon />}
           {zone.type === 'transition' && <TransitionIcon />}
-          <div className="text-base font-semibold truncate">{zoneLabel}</div>
+          {zone.type !== 'wall' && <div className="text-base font-semibold truncate">{zoneLabel}</div>}
 
           {!isView && showActions && (
             <div className="flex items-center space-x-1 text-xs absolute top-1 right-1">

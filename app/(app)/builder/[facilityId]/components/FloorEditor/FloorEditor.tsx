@@ -9,9 +9,12 @@ import { Button } from '@/components/ui/Button/Button';
 import { Loader } from 'lucide-react';
 import { ZoneGrid } from '@/components/ZoneGrid/ZoneGrid';
 import { v4 as uuidv4 } from 'uuid';
-import { ZoneType } from '@/store/builder/types';
+import { Doctor, ZoneType } from '@/store/builder/types';
+import { cn } from '@/lib/utils/utils';
+import { useModal } from '@/store/modal/modal';
+import { PRESETS } from '@/app/(app)/builder/[facilityId]/components/Palette/Palette';
 
-export const FloorEditor = ({ floorName }: { floorName: string }) => {
+export const FloorEditor = ({ floorName, doctors }: { floorName: string, doctors: Doctor[] }) => {
   const {
     floors,
     selectedFloorIndex,
@@ -21,11 +24,12 @@ export const FloorEditor = ({ floorName }: { floorName: string }) => {
     addZoneToCurrentFloor,
     dragItem,
   } = useMapBuilder();
+  const { setDoctors } = useModal();
   const floor = selectedFloorIndex != null ? floors[selectedFloorIndex] : null;
   const zones = floor?.zones || [];
   const [isLoading, setIsLoading] = useState(false);
   const [loadingState, setLoadingState] = useState<Record<string, boolean>>({});
-
+  const [isSaving, setIsSaving] = useState(false);
   const layout = zones.map((zone) => ({
     i: zone.id,
     x: zone.x,
@@ -37,6 +41,10 @@ export const FloorEditor = ({ floorName }: { floorName: string }) => {
     isDraggable: true,
     isResizable: true,
   }));
+
+  useEffect(() => {
+    setDoctors(doctors);
+  }, [doctors]);
 
   useEffect(() => {
     if (!floor || !floor.id) return;
@@ -88,35 +96,53 @@ export const FloorEditor = ({ floorName }: { floorName: string }) => {
     );
   }
 
+  const onSubmit = async () => {
+    if (floor) {
+      setIsSaving(true);
+      await saveZonesToDatabase(floor.id);
+      setIsSaving(false);
+    }
+  };
+
   return (
     <div className="flex flex-col gap-4">
       <div className="flex justify-between items-center">
         <h1 className="text-xl font-semibold">{floorName ?? 'Поверх'}</h1>
-        <Button onClick={() => floor && saveZonesToDatabase(floor.id)}>Зберегти</Button>
+        <Button onClick={onSubmit}>Зберегти</Button>
       </div>
-      <ZoneGrid
-        layout={layout}
-        onLayoutChange={onLayoutChange}
-        onInteraction={onInteraction}
-        zones={zones}
-        floor={floor}
-        isEditable={true}
-        onDrop={(_, item) => {
-          addZoneToCurrentFloor({
-            id: uuidv4(),
-            floor_id: floor.id,
-            type: dragItem?.type as ZoneType,
-            x: item.x,
-            y: item.y,
-            width: item.w,
-            height: item.h,
-            minW: item.minW,
-            minH: item.minH,
-            color: dragItem?.color as string,
-            subtitle: dragItem?.label as string,
-          });
-        }}
-      />
+      <div className={cn('relative', { 'opacity-40': isSaving })}>
+        {isSaving && (
+          <div
+            className="z-20 flex gap-4 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 items-center">
+            <Loader className="spin animate-spin" />
+            <span>Збереження Зон</span>
+          </div>
+        )}
+        <ZoneGrid
+          layout={layout}
+          onLayoutChange={onLayoutChange}
+          onInteraction={onInteraction}
+          zones={zones}
+          floor={floor}
+          isEditable={true}
+          onDrop={(_, item) => {
+            const getZone = PRESETS.find((zone) => zone.type === dragItem?.type);
+            addZoneToCurrentFloor({
+              id: uuidv4(),
+              floor_id: floor.id,
+              type: dragItem?.type as ZoneType,
+              x: item.x,
+              y: item.y,
+              width: item.w,
+              height: item.h,
+              minW: getZone?.minW,
+              minH: getZone?.minH,
+              color: dragItem?.color as string,
+              subtitle: dragItem?.label as string,
+            });
+          }}
+        />
+      </div>
     </div>
   );
 };

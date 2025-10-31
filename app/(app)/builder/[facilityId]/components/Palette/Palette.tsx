@@ -21,6 +21,7 @@ export const PRESETS = [
   { type: 'lift', label: 'Ліфт', color: '#3498DB', w: 2, h: 2, minW: 1, minH: 1 },
   { type: 'stairs', label: 'Сходи', color: '#c29bd7', w: 2, h: 2, minW: 1, minH: 1 },
   { type: 'transition', label: 'Перехід', color: '#95a5a6', w: 2, h: 2, minW: 1, minH: 1 },
+  { type: 'wall', label: 'Стіна', color: '#000000', w: 1, h: 1, minW: 1, minH: 1 },
 ];
 
 export const Palette = () => {

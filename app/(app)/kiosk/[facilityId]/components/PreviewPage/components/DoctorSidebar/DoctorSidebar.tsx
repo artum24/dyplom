@@ -28,7 +28,7 @@ export const DoctorSidebar = ({ zonesOnFloor, onPickDoctor }: DoctorSidebarProps
       </CardHeader>
       <CardContent className="space-y-3 border-t">
         <div className="pt-3">
-          <div className="space-y-2 max-h-[220px] overflow-auto pr-2">
+          <div className="space-y-2 max-h-full overflow-auto pr-2">
             {doctors.length === 0 && (
               <div className="text-xs text-slate-500">Нічого не знайдено</div>
             )}
